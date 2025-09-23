@@ -199,6 +199,16 @@ class DashboardApp {
         return data;
     }
 
+    clearCacheForPattern(pattern) {
+        const keysToDelete = [];
+        for (const key of this.cache.keys()) {
+            if (key.includes(pattern)) {
+                keysToDelete.push(key);
+            }
+        }
+        keysToDelete.forEach(key => this.cache.delete(key));
+    }
+
     async loadQuickStats() {
         try {
             const stats = await this.fetchWithCache('/api/stats/quick');
@@ -551,8 +561,12 @@ class DashboardApp {
 
     async loadAnalyticsSection() {
         try {
+            // Get current domain filter if any
+            const domainFilter = (document.getElementById('orgDomainFilter') || {}).value || 'all';
+            const domainParam = domainFilter && domainFilter !== 'all' ? `?domain=${encodeURIComponent(domainFilter)}` : '';
+
             // Load section analysis for radar chart
-            const sectionsData = await this.fetchWithCache('/api/sections');
+            const sectionsData = await this.fetchWithCache(`/api/sections${domainParam}`);
             await this.populateSectionOrgFilter();
             this.setupSectionAnalysisChart(sectionsData);
 
@@ -601,6 +615,9 @@ class DashboardApp {
         const comparison = (document.getElementById('sectionComparisonMode') || {}).value || 'single';
         const selectedOrg = (document.getElementById('sectionOrgFilter') || {}).value || 'all';
         const multiSel = document.getElementById('sectionOrgMulti');
+
+        // Clear cache for organization sections when switching comparison modes or organizations
+        this.clearCacheForPattern('/api/organizations/sections');
 
         const labels = Object.keys(sectionsData).map(label => label.replace('_', ' ').toUpperCase());
         const overallValues = Object.keys(sectionsData).map(k => sectionsData[k].overall_score || 0);
