@@ -876,13 +876,14 @@ def get_sunburst_data():
 @app.route('/api/advanced/ridge', methods=['GET'])
 @cache_with_request_params(maxsize=128)
 def get_ridge_data():
-    """Ridge-like distribution data: for a given domain, per-section normalized histograms."""
-    if not raw_data:
-        return jsonify({'bins': [], 'sections': {}})
-
-    domain = request.args.get('domain', 'all')
+    """Get ridge plot data for section distributions by domain (6.1) - Enhanced version"""
+    domain_filter = request.args.get('domain', 'all')
     bins = int(request.args.get('bins', 30))
 
+    if not raw_data:
+        return jsonify({'sections': [], 'domains': []})
+
+    # Define sections
     sections = {
         'Power Abuse & Suppression': ['q1', 'q2', 'q3', 'q4'],
         'Discrimination & Exclusion': ['q5', 'q6', 'q7'],
@@ -892,29 +893,53 @@ def get_ridge_data():
         'Erosion of Voice & Autonomy': ['q19', 'q20', 'q21', 'q22']
     }
 
-    # collect section scores for the selected domain or all
-    section_scores = {name: [] for name in sections.keys()}
-    for r in raw_data:
-        if domain.lower() != 'all' and (r.get('domain') or '').lower() != domain.lower():
-            continue
-        for name, qs in sections.items():
-            vals = [r.get(q) for q in qs if r.get(q) is not None]
-            if vals:
-                section_scores[name].append(sum(vals)/len(vals))
+    # Get unique domains
+    domains = sorted(list(set(record.get('domain', 'Unknown') for record in raw_data)))
+    if domain_filter != 'all':
+        domains = [d for d in domains if d.lower() == domain_filter.lower()]
 
-    edges = np.linspace(1, 4, bins + 1)
-    centers = ((edges[:-1] + edges[1:]) / 2.0).tolist()
-    result = {}
-    for name, arr in section_scores.items():
-        if not arr:
-            continue
-        counts, _ = np.histogram(arr, bins=bins, range=(1,4), density=True)
-        result[name] = {
-            'x': centers,
-            'y': counts.tolist()
-        }
+    ridge_data = {'domains': [], 'sections': list(sections.keys())}
 
-    return jsonify({'sections': result, 'x': centers})
+    for domain in domains:
+        domain_records = [r for r in raw_data if r.get('domain', 'Unknown') == domain]
+
+        domain_data = {'domain': domain, 'distributions': []}
+
+        for section_name, questions in sections.items():
+            scores = []
+            for record in domain_records:
+                section_scores = [record.get(q, 0) for q in questions if record.get(q) is not None]
+                if section_scores:
+                    scores.append(sum(section_scores) / len(section_scores))
+
+            if scores:
+                # Create histogram
+                hist, bin_edges = np.histogram(scores, bins=bins, range=(1, 4))
+                bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+                domain_data['distributions'].append({
+                    'section': section_name,
+                    'x': bin_centers.tolist(),
+                    'y': hist.tolist(),
+                    'density': (hist / np.max(hist)).tolist() if np.max(hist) > 0 else hist.tolist(),
+                    'count': len(scores),
+                    'mean': np.mean(scores),
+                    'std': np.std(scores)
+                })
+            else:
+                domain_data['distributions'].append({
+                    'section': section_name,
+                    'x': [],
+                    'y': [],
+                    'density': [],
+                    'count': 0,
+                    'mean': 0,
+                    'std': 0
+                })
+
+        ridge_data['domains'].append(domain_data)
+
+    return jsonify(ridge_data)
 
 @app.route('/api/tenure/matrix', methods=['GET'])
 @cache_with_request_params(maxsize=128)
@@ -1253,6 +1278,7 @@ def get_organization_sections():
             }
 
     return jsonify(section_results)
+
 
 @app.route('/api/refresh', methods=['POST'])
 def refresh_data():

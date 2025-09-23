@@ -1037,10 +1037,18 @@
                                                         <option value="10">10+</option>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-3">
                                                     <label class="form-label">Domain</label>
                                                     <select class="form-select" id="hierarchicalDomain">
                                                         <option value="all" selected>All Domains</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Ridge Plot Bins</label>
+                                                    <select class="form-select" id="ridgeBins">
+                                                        <option value="20">20 bins</option>
+                                                        <option value="30" selected>30 bins</option>
+                                                        <option value="40">40 bins</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -1055,10 +1063,32 @@
                                             <h5 class="chart-title">Organizational Hierarchy</h5>
                                         </div>
                                         <div class="chart-body">
+                                            <!-- Treemap Chart (6.2) -->
                                             <div id="treemapChart" style="height: 400px;"></div>
-                                            <div class="w-100" id="sunburstContainer" style="display:none">
-                                                <div id="sunburstPlot" style="height: 420px; width: 100%;"></div>
-                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sunburst Chart (6.3) -->
+                                <div class="col-xl-4">
+                                    <div class="chart-card">
+                                        <div class="chart-header">
+                                            <h5 class="chart-title">Position Hierarchy Sunburst (6.3)</h5>
+                                        </div>
+                                        <div class="chart-body">
+                                            <div id="sunburstChart" style="height: 400px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ridge Plot (6.1) -->
+                                <div class="col-12">
+                                    <div class="chart-card">
+                                        <div class="chart-header">
+                                            <h5 class="chart-title">Ridge Plots for Section Distributions (6.1)</h5>
+                                        </div>
+                                        <div class="chart-body">
+                                            <div id="ridgePlot" style="height: 600px;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1225,6 +1255,13 @@
     <!-- Chart.js with local fallback -->
     <script src="/static/chart.min.js"
             onerror="this.onerror=null; this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js'"></script>
+
+    <!-- Plotly.js for advanced visualizations -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- Chart.js zoom plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
 
     <!-- Safety: hide overlay even if main script fails -->
     <script>

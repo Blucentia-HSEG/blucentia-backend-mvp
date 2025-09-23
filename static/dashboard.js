@@ -10,7 +10,50 @@ class DashboardApp {
         this.virtualTable = null;
         this.debounceTimeout = null;
 
+        // Register Chart.js zoom plugin when available
+        this.registerZoomPlugin();
+
         this.init();
+    }
+
+    registerZoomPlugin() {
+        // Wait for Chart.js and zoom plugin to load
+        const checkAndRegister = () => {
+            if (typeof Chart !== 'undefined' && typeof Chart.register === 'function' &&
+                typeof zoomPlugin !== 'undefined') {
+                try {
+                    Chart.register(zoomPlugin);
+                    console.log('Chart.js zoom plugin registered successfully');
+                } catch (error) {
+                    console.warn('Failed to register zoom plugin:', error);
+                }
+            } else {
+                setTimeout(checkAndRegister, 100);
+            }
+        };
+        checkAndRegister();
+    }
+
+    getZoomOptions(chartType = 'default') {
+        // Default zoom configuration for Chart.js charts
+        return {
+            zoom: {
+                wheel: {
+                    enabled: true,
+                    modifierKey: 'ctrl'
+                },
+                pinch: {
+                    enabled: true
+                },
+                mode: chartType === 'scatter' || chartType === 'line' ? 'xy' : 'x',
+                scaleMode: 'xy'
+            },
+            pan: {
+                enabled: true,
+                mode: chartType === 'scatter' || chartType === 'line' ? 'xy' : 'x',
+                modifierKey: 'shift'
+            }
+        };
     }
 
     init() {
@@ -1875,46 +1918,278 @@ class DashboardApp {
 
     async setupTreemapChart() {
         try {
-            const hierarchicalData = await this.fetchWithCache('/api/advanced/hierarchical');
+            // Get filter values
+            const minCount = (document.getElementById('hierarchicalMinResponses') || {}).value || 5;
+            const domain = (document.getElementById('hierarchicalDomain') || {}).value || 'all';
+
+            const treemapData = await this.fetchWithCache(`/api/advanced/treemap?min_count=${minCount}&domain=${domain}`);
             const container = document.getElementById('treemapChart');
 
-            if (!container || !hierarchicalData) return;
+            if (!container || !treemapData || treemapData.length === 0) {
+                if (container) container.innerHTML = '<div class="alert alert-info">No treemap data available with current filters</div>';
+                return;
+            }
 
-            // Simple treemap implementation using divs
+            // Clear container and create treemap using Plotly
             container.innerHTML = '';
-            container.style.position = 'relative';
-            container.style.height = '300px';
 
-            const maxCount = Math.max(...hierarchicalData.map(d => d.count));
+            // Prepare data for Plotly treemap
+            const ids = treemapData.map(d => d.ids);
+            const labels = treemapData.map(d => d.labels);
+            const parents = treemapData.map(d => d.parents);
+            const values = treemapData.map(d => d.values);
+            const scores = treemapData.map(d => d.score);
 
-            hierarchicalData.slice(0, 20).forEach((item, index) => {
-                const div = document.createElement('div');
-                const size = Math.sqrt(item.count / maxCount) * 100;
+            const trace = {
+                type: 'treemap',
+                ids: ids,
+                labels: labels,
+                parents: parents,
+                values: values,
+                text: labels.map((label, i) => `${label}<br>Responses: ${values[i]}<br>Score: ${scores[i].toFixed(2)}`),
+                textinfo: 'label+value',
+                hovertemplate: '<b>%{label}</b><br>Responses: %{value}<br>Culture Score: %{color:.2f}<extra></extra>',
+                colorscale: 'RdYlBu_r',
+                colorbar: {
+                    title: 'Culture Score',
+                    titleside: 'right'
+                },
+                marker: {
+                    colorscale: 'RdYlBu_r',
+                    color: scores,
+                    colorbar: { title: 'Culture Score' },
+                    line: { width: 2, color: 'white' }
+                }
+            };
 
-                div.style.position = 'absolute';
-                div.style.width = `${size}px`;
-                div.style.height = `${size}px`;
-                div.style.backgroundColor = this.getColorByDomain(item.domain);
-                div.style.border = '1px solid #fff';
-                div.style.left = `${(index % 5) * 80}px`;
-                div.style.top = `${Math.floor(index / 5) * 60}px`;
-                div.style.display = 'flex';
-                div.style.alignItems = 'center';
-                div.style.justifyContent = 'center';
-                div.style.fontSize = '10px';
-                div.style.color = 'white';
-                div.style.fontWeight = 'bold';
-                div.style.textAlign = 'center';
-                div.style.cursor = 'pointer';
-                div.title = `${item.organization} - ${item.department}\nCount: ${item.count}\nScore: ${item.avg_culture_score}`;
-                const label = (item.department || '').toString();
-                const short = label.length > 12 ? label.slice(0, 9) + '…' : label;
-                div.innerHTML = `${short}<br/><small>${item.count}</small>`;
+            const layout = {
+                title: {
+                    text: 'Organizational Structure Treemap (6.2)<br><sub>Size = Response Count, Color = Culture Score</sub>',
+                    font: { size: 16 }
+                },
+                margin: { t: 50, l: 10, r: 10, b: 10 },
+                font: { size: 12 }
+            };
 
-                container.appendChild(div);
-            });
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToAdd: ['zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'resetScale2d'],
+                modeBarButtonsToRemove: ['lasso2d', 'select2d']
+            };
+
+            Plotly.newPlot(container, [trace], layout, config);
+
         } catch (error) {
             console.error('Failed to setup treemap chart:', error);
+            const container = document.getElementById('treemapChart');
+            if (container) container.innerHTML = '<div class="alert alert-danger">Error loading treemap visualization</div>';
+        }
+    }
+
+    async setupRidgePlot() {
+        try {
+            // Get filter values
+            const domain = (document.getElementById('hierarchicalDomain') || {}).value || 'all';
+            const bins = (document.getElementById('ridgeBins') || {}).value || 30;
+
+            const ridgeData = await this.fetchWithCache(`/api/advanced/ridge?domain=${domain}&bins=${bins}`);
+            const container = document.getElementById('ridgePlot');
+
+            if (!container || !ridgeData || ridgeData.domains.length === 0) {
+                if (container) container.innerHTML = '<div class="alert alert-info">No ridge plot data available</div>';
+                return;
+            }
+
+            // Clear container
+            container.innerHTML = '';
+
+            const traces = [];
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
+
+            ridgeData.domains.forEach((domainData, domainIndex) => {
+                domainData.distributions.forEach((distribution, sectionIndex) => {
+                    if (distribution.count > 0) {
+                        const y_offset = domainIndex * ridgeData.sections.length + sectionIndex;
+
+                        // Normalize density for better visualization
+                        const normalizedDensity = distribution.density.map(d => d * 0.8 + y_offset);
+
+                        traces.push({
+                            type: 'scatter',
+                            mode: 'lines',
+                            fill: 'tonexty',
+                            x: distribution.x,
+                            y: normalizedDensity,
+                            name: `${domainData.domain} - ${distribution.section}`,
+                            fillcolor: colors[sectionIndex % colors.length] + '40',
+                            line: {
+                                color: colors[sectionIndex % colors.length],
+                                width: 2
+                            },
+                            hovertemplate: `<b>${domainData.domain}</b><br><b>${distribution.section}</b><br>Score: %{x:.2f}<br>Count: ${distribution.count}<br>Mean: ${distribution.mean.toFixed(2)}<extra></extra>`,
+                            showlegend: domainIndex === 0
+                        });
+
+                        // Add baseline
+                        traces.push({
+                            type: 'scatter',
+                            mode: 'lines',
+                            x: distribution.x,
+                            y: Array(distribution.x.length).fill(y_offset),
+                            line: { color: colors[sectionIndex % colors.length], width: 1 },
+                            showlegend: false,
+                            hoverinfo: 'skip'
+                        });
+                    }
+                });
+            });
+
+            const layout = {
+                title: {
+                    text: 'Ridge Plots for Section Score Distributions (6.1)<br><sub>Cultural Assessment by Domain and Section</sub>',
+                    font: { size: 16 }
+                },
+                xaxis: {
+                    title: 'Culture Score',
+                    range: [1, 4],
+                    showgrid: true
+                },
+                yaxis: {
+                    title: 'Domains and Sections',
+                    tickmode: 'array',
+                    tickvals: ridgeData.domains.flatMap((domain, dIdx) =>
+                        ridgeData.sections.map((section, sIdx) => dIdx * ridgeData.sections.length + sIdx)
+                    ),
+                    ticktext: ridgeData.domains.flatMap(domain =>
+                        ridgeData.sections.map(section => `${domain.domain}<br>${section.replace(' & ', '<br>&')}`)
+                    ),
+                    showgrid: false
+                },
+                margin: { t: 80, l: 200, r: 50, b: 60 },
+                height: Math.max(400, ridgeData.domains.length * ridgeData.sections.length * 40)
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToAdd: ['zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'resetScale2d'],
+                modeBarButtonsToRemove: ['lasso2d', 'select2d']
+            };
+
+            Plotly.newPlot(container, traces, layout, config);
+
+        } catch (error) {
+            console.error('Failed to setup ridge plot:', error);
+            const container = document.getElementById('ridgePlot');
+            if (container) container.innerHTML = '<div class="alert alert-danger">Error loading ridge plot visualization</div>';
+        }
+    }
+
+    async setupSunburstChart() {
+        try {
+            // Get filter values
+            const minCount = (document.getElementById('hierarchicalMinResponses') || {}).value || 3;
+            const domain = (document.getElementById('hierarchicalDomain') || {}).value || 'all';
+
+            const sunburstData = await this.fetchWithCache(`/api/advanced/sunburst?min_count=${minCount}&domain=${domain}`);
+            const container = document.getElementById('sunburstChart');
+
+            if (!container || !sunburstData || sunburstData.length === 0) {
+                if (container) container.innerHTML = '<div class="alert alert-info">No sunburst data available with current filters</div>';
+                return;
+            }
+
+            // Clear container
+            container.innerHTML = '';
+
+            // Prepare data for Plotly sunburst
+            const ids = sunburstData.map(d => d.ids);
+            const labels = sunburstData.map(d => d.labels);
+            const parents = sunburstData.map(d => d.parents);
+            const values = sunburstData.map(d => d.values);
+            const scores = sunburstData.map(d => d.score);
+
+            const trace = {
+                type: 'sunburst',
+                ids: ids,
+                labels: labels,
+                parents: parents,
+                values: values,
+                hovertemplate: '<b>%{label}</b><br>Responses: %{value}<br>Culture Score: %{color:.2f}<extra></extra>',
+                leaf: { opacity: 0.8 },
+                marker: {
+                    colorscale: 'RdYlBu_r',
+                    color: scores,
+                    colorbar: {
+                        title: 'Culture Score',
+                        titleside: 'right'
+                    },
+                    line: { width: 2, color: 'white' }
+                },
+                branchvalues: 'total'
+            };
+
+            const layout = {
+                title: {
+                    text: 'Organizational Hierarchy Sunburst (6.3)<br><sub>Domain → Position Level → Department</sub>',
+                    font: { size: 16 }
+                },
+                margin: { t: 80, l: 10, r: 10, b: 10 },
+                font: { size: 12 }
+            };
+
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToAdd: ['zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'resetScale2d'],
+                modeBarButtonsToRemove: ['lasso2d', 'select2d']
+            };
+
+            Plotly.newPlot(container, [trace], layout, config);
+
+        } catch (error) {
+            console.error('Failed to setup sunburst chart:', error);
+            const container = document.getElementById('sunburstChart');
+            if (container) container.innerHTML = '<div class="alert alert-danger">Error loading sunburst visualization</div>';
+        }
+    }
+
+    async setupHierarchicalChart() {
+        try {
+            // This is the original hierarchical chart from the existing code
+            const type = (document.getElementById('hierarchicalType') || {}).value || 'treemap';
+            const minResp = parseInt((document.getElementById('hierarchicalMinResponses') || {}).value || '5', 10);
+            const dom = (document.getElementById('hierarchicalDomain') || {}).value || 'all';
+
+            // Fill domain dropdown if empty
+            const domainSel = document.getElementById('hierarchicalDomain');
+            if (domainSel && domainSel.options.length <= 1) {
+                const domains = await this.fetchWithCache('/api/domains/list');
+                const have = new Set(Array.from(domainSel.options).map(o => o.value));
+                domains.forEach(domain => {
+                    if (!have.has(domain)) {
+                        const opt = new Option(domain, domain);
+                        domainSel.appendChild(opt);
+                    }
+                });
+            }
+
+            // Fetch data and update original chart
+            const params = new URLSearchParams({ min_count: String(minResp), domain: dom, _: String(Date.now()) });
+            const hierarchical = await this.fetchWithCache(`/api/advanced/hierarchical?${params.toString()}`);
+            if (!hierarchical) return;
+
+            // Update original hierarchical visualization
+            const treemapEl = document.getElementById('treemapChart');
+            if (treemapEl && hierarchical.length > 0) {
+                hierarchical.forEach(d => {
+                    if (!d.color) d.color = this.getColorByDomain(d.domain);
+                });
+            }
+
+        } catch (error) {
+            console.error('Failed to setup hierarchical chart:', error);
         }
     }
 
@@ -2405,6 +2680,9 @@ class DashboardApp {
                 break;
             case 'hierarchical':
                 await this.setupHierarchicalChart();
+                await this.setupTreemapChart();
+                await this.setupRidgePlot();
+                await this.setupSunburstChart();
                 break;
         }
     }
