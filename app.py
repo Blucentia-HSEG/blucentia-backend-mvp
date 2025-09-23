@@ -627,6 +627,8 @@ def get_trend_data():
     """Get trend data for charts"""
     days = int(request.args.get('days', 30))
     metric = request.args.get('metric', 'culture_score')
+    granularity = request.args.get('granularity', 'weekly')
+    smoothing = request.args.get('smoothing', 'none')
 
     if not raw_data:
         return jsonify({"labels": [], "datasets": []})
@@ -635,41 +637,121 @@ def get_trend_data():
     from collections import defaultdict
     import datetime
 
+    # Define survey sections
+    sections = {
+        'Power Abuse & Suppression': ['q1', 'q2', 'q3', 'q4'],
+        'Discrimination & Exclusion': ['q5', 'q6', 'q7'],
+        'Manipulative Work Culture': ['q8', 'q9', 'q10'],
+        'Failure of Accountability': ['q11', 'q12', 'q13', 'q14'],
+        'Mental Health Harm': ['q15', 'q16', 'q17', 'q18'],
+        'Erosion of Voice & Autonomy': ['q19', 'q20', 'q21', 'q22']
+    }
+
     date_scores = defaultdict(list)
+    section_date_scores = defaultdict(lambda: defaultdict(list))
 
     for record in raw_data:
         date_str = record.get('submission_date', '')
         if date_str:
             try:
                 date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+
+                # Apply granularity grouping
+                if granularity == 'monthly':
+                    date_key = date_obj.strftime('%Y-%m')
+                elif granularity == 'weekly':
+                    # Get start of week (Monday)
+                    week_start = date_obj - datetime.timedelta(days=date_obj.weekday())
+                    date_key = week_start.strftime('%Y-%m-%d')
+                else:  # daily
+                    date_key = date_str
+
                 if metric == 'response_count':
-                    date_scores[date_str].append(1)
-                else:
+                    date_scores[date_key].append(1)
+                elif metric == 'section_scores':
+                    # Calculate section scores for this record
+                    for section_name, questions in sections.items():
+                        scores = [record.get(q, 0) for q in questions if record.get(q) is not None]
+                        if scores:
+                            section_score = sum(scores) / len(scores)
+                            section_date_scores[section_name][date_key].append(section_score)
+                else:  # culture_score
                     scores = [record.get(f'q{i}', 0) for i in range(1, 23) if record.get(f'q{i}') is not None]
                     if scores:
                         avg_score = sum(scores) / len(scores)
-                        date_scores[date_str].append(avg_score)
+                        date_scores[date_key].append(avg_score)
             except:
                 pass
 
+    # Apply smoothing function
+    def apply_smoothing(data, method):
+        if method == 'none' or len(data) < 3:
+            return data
+        elif method == 'ma7':
+            window = min(7, len(data))
+        elif method == 'ma30':
+            window = min(30, len(data))
+        else:
+            return data
+
+        smoothed = []
+        for i in range(len(data)):
+            start_idx = max(0, i - window // 2)
+            end_idx = min(len(data), i + window // 2 + 1)
+            smoothed.append(sum(data[start_idx:end_idx]) / (end_idx - start_idx))
+        return smoothed
+
     # Create trend data
-    labels = sorted(date_scores.keys())[-days:]
-    if metric == 'response_count':
-        trend_data = [
-            sum(date_scores[date]) if date_scores[date] else 0
-            for date in labels
-        ]
-        dataset = {"label": "Responses", "data": trend_data, "borderColor": "#10b981", "backgroundColor": "rgba(16,185,129,0.1)", "tension": 0.3}
+    if metric == 'section_scores':
+        # Return multiple datasets for each section
+        datasets = []
+        colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#06b6d4']
+
+        all_dates = set()
+        for section_scores in section_date_scores.values():
+            all_dates.update(section_scores.keys())
+
+        labels = sorted(list(all_dates))[-days:]
+
+        for i, (section_name, section_scores) in enumerate(section_date_scores.items()):
+            trend_data = []
+            for date in labels:
+                if date in section_scores and section_scores[date]:
+                    avg_score = sum(section_scores[date]) / len(section_scores[date])
+                    trend_data.append(round(avg_score, 2))
+                else:
+                    trend_data.append(0)
+
+            # Apply smoothing
+            trend_data = apply_smoothing(trend_data, smoothing)
+
+            datasets.append({
+                "label": section_name,
+                "data": trend_data,
+                "borderColor": colors[i % len(colors)],
+                "backgroundColor": f"{colors[i % len(colors)]}20",
+                "tension": 0.3
+            })
     else:
-        trend_data = [
-            round(sum(date_scores[date]) / len(date_scores[date]), 2) if date_scores[date] else 0
-            for date in labels
-        ]
-        dataset = {"label": "Culture Score", "data": trend_data, "borderColor": "#2563eb", "backgroundColor": "rgba(37, 99, 235, 0.1)", "tension": 0.4}
+        labels = sorted(date_scores.keys())[-days:]
+        if metric == 'response_count':
+            trend_data = [
+                sum(date_scores[date]) if date_scores[date] else 0
+                for date in labels
+            ]
+            trend_data = apply_smoothing(trend_data, smoothing)
+            datasets = [{"label": "Responses", "data": trend_data, "borderColor": "#10b981", "backgroundColor": "rgba(16,185,129,0.1)", "tension": 0.3}]
+        else:
+            trend_data = [
+                round(sum(date_scores[date]) / len(date_scores[date]), 2) if date_scores[date] else 0
+                for date in labels
+            ]
+            trend_data = apply_smoothing(trend_data, smoothing)
+            datasets = [{"label": "Culture Score", "data": trend_data, "borderColor": "#2563eb", "backgroundColor": "rgba(37, 99, 235, 0.1)", "tension": 0.4}]
 
     return jsonify({
         "labels": labels,
-        "datasets": [dataset]
+        "datasets": datasets
     })
 
 @app.route('/api/advanced/hierarchical', methods=['GET'])

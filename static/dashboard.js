@@ -93,8 +93,13 @@ class DashboardApp {
         // Analytics trends controls (separate from dashboard)
         const aRange = document.getElementById('analyticsTrendTimeRange');
         const aMetric = document.getElementById('analyticsTrendMetric');
+        const aGranularity = document.getElementById('analyticsTrendGranularity');
+        const aSmoothing = document.getElementById('analyticsTrendSmoothing');
+
         if (aRange) aRange.addEventListener('change', (e)=> this.updateAnalyticsTrendChart(e.target.value));
         if (aMetric) aMetric.addEventListener('change', ()=> { const val = (aRange||{}).value || '30d'; this.updateAnalyticsTrendChart(val); });
+        if (aGranularity) aGranularity.addEventListener('change', ()=> { const val = (aRange||{}).value || '30d'; this.updateAnalyticsTrendChart(val); });
+        if (aSmoothing) aSmoothing.addEventListener('change', ()=> { const val = (aRange||{}).value || '30d'; this.updateAnalyticsTrendChart(val); });
 
         // Section tab functionality
         this.setupSectionTabs();
@@ -2298,14 +2303,34 @@ class DashboardApp {
         try {
             const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
             const metric = (document.getElementById('analyticsTrendMetric')||{}).value || 'culture_score';
-            const data = await this.fetchWithCache(`/api/analytics/trend?days=${days}&metric=${metric}`);
+            const granularity = (document.getElementById('analyticsTrendGranularity')||{}).value || 'weekly';
+            const smoothing = (document.getElementById('analyticsTrendSmoothing')||{}).value || 'none';
+
+            const data = await this.fetchWithCache(`/api/analytics/trend?days=${days}&metric=${metric}&granularity=${granularity}&smoothing=${smoothing}`);
             const ctx = document.getElementById('analyticsTrendChart');
             if (!ctx || !data.labels) return;
             if (this.charts.analyticsTrendChart) this.charts.analyticsTrendChart.destroy();
+
+            // Adjust chart options based on metric type
+            let chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: metric === 'culture_score' ? { min: 1.5, max: 3.0, ticks: { stepSize: 0.25 } } :
+                        metric === 'section_scores' ? { min: 1.0, max: 4.0, ticks: { stepSize: 0.5 } } : {}
+                },
+                plugins: {
+                    legend: {
+                        display: metric === 'section_scores',
+                        position: 'right'
+                    }
+                }
+            };
+
             this.charts.analyticsTrendChart = new Chart(ctx, {
                 type: 'line',
                 data: { labels: data.labels, datasets: data.datasets },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: metric==='culture_score' ? { min:1.5, max:3.0, ticks:{ stepSize:0.25 } } : {} } }
+                options: chartOptions
             });
         } catch (e) { console.error('Failed to update analytics trend chart:', e); }
     }
@@ -2334,7 +2359,7 @@ class DashboardApp {
             '#orgSortBy', '#performanceTimeRange', '#topOrgCount',
             '#distributionGroupBy', '#distributionMetric',
             '#sectionOrgFilter', '#sectionOrgMulti', '#sectionChartType', '#sectionComparisonMode',
-            '#trendTimeRange', '#trendMetric', '#trendGranularity', '#trendSmoothing',
+            '#analyticsTrendTimeRange', '#analyticsTrendMetric', '#analyticsTrendGranularity', '#analyticsTrendSmoothing',
             '#distributionType', '#distributionBins',
             '#pcaComponents', '#pcaFeatures', '#pcaScaling',
             '#clusteringAlgorithm', '#clusterCount', '#clusterMetric', '#clusterBy',
