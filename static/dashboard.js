@@ -2534,6 +2534,9 @@ class DashboardApp {
             const ctx = document.getElementById('distributionChart');
             if (!ctx) return;
 
+            // Clear distribution cache to ensure fresh data with new bin size
+            this.clearCacheForPattern('/api/distributions/');
+
             if (this.charts.distributionChart) this.charts.distributionChart.destroy();
 
             if (type === 'scores') {
@@ -2553,14 +2556,64 @@ class DashboardApp {
                     options: { responsive: true, maintainAspectRatio: false }
                 });
             } else if (type === 'sections') {
-                // Use section averages instead of stacked histograms for clarity
-                const sections = await this.fetchWithCache('/api/sections');
-                const labels = Object.keys(sections);
-                const values = labels.map(k => sections[k]?.overall_score || 0);
+                // Get domain filter for sections analysis
+                const domainFilter = (document.getElementById('orgDomainFilter') || {}).value || 'all';
+                const domainParam = domainFilter && domainFilter !== 'all' ? `?domain=${encodeURIComponent(domainFilter)}` : '';
+
+                const sections = await this.fetchWithCache(`/api/sections${domainParam}`);
+                const labels = Object.keys(sections).map(label => label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+                const values = Object.keys(sections).map(k => sections[k]?.overall_score || 0);
+
+                // Color-code based on HSEG risk zones
+                const colors = values.map(score => {
+                    if (score <= 1.5) return '#dc2626'; // Crisis Zone - Red
+                    if (score <= 2.0) return '#ea580c'; // At Risk Zone - Orange
+                    if (score <= 2.5) return '#ca8a04'; // Mixed Zone - Yellow
+                    if (score <= 3.0) return '#16a34a'; // Safe Zone - Green
+                    return '#059669'; // Thriving Zone - Emerald
+                });
+
                 this.charts.distributionChart = new Chart(ctx, {
                     type: 'bar',
-                    data: { labels, datasets: [{ label: 'Average Score', data: values, backgroundColor: '#2563eb' }] },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 1, max: 4, ticks: { stepSize: 0.5 } } } }
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: `Cultural Risk Assessment ${domainFilter !== 'all' ? `(${domainFilter})` : '(All Domains)'}`,
+                            data: values,
+                            backgroundColor: colors,
+                            borderColor: colors.map(c => c.replace('#', '#').replace(/(..)(..)(..)/, '#$1$2$3dd')),
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                min: 1,
+                                max: 4,
+                                ticks: { stepSize: 0.5 },
+                                title: { display: true, text: 'Cultural Health Score (1=Crisis, 4=Thriving)' }
+                            },
+                            x: {
+                                title: { display: true, text: 'Cultural Assessment Dimensions' }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    afterLabel: function(context) {
+                                        const score = context.parsed.y;
+                                        if (score <= 1.5) return 'Zone: Crisis - Immediate intervention required';
+                                        if (score <= 2.0) return 'Zone: At Risk - Early warning signs present';
+                                        if (score <= 2.5) return 'Zone: Mixed - Inconsistent cultural experiences';
+                                        if (score <= 3.0) return 'Zone: Safe - Generally healthy environment';
+                                        return 'Zone: Thriving - Exemplary cultural practices';
+                                    }
+                                }
+                            }
+                        }
+                    }
                 });
             }
         } catch (error) {
