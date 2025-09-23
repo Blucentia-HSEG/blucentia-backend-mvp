@@ -5,8 +5,9 @@ import os
 from data_visualization import main as generate_visualizations
 import numpy as np
 import math
-from functools import lru_cache
+from functools import wraps
 import time
+import hashlib
 from collections import defaultdict
 
 class NpEncoder(json.JSONEncoder):
@@ -26,6 +27,43 @@ CORS(app)
 processed_data = None
 raw_data = None
 data_cache = {}
+
+def cache_with_request_params(maxsize=128):
+    """Cache decorator that includes request parameters in cache key"""
+    def decorator(func):
+        cache = {}
+        access_order = []
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Create cache key from function name and query parameters
+            query_params = dict(request.args) if request else {}
+            cache_key = f"{func.__name__}_{hashlib.md5(str(sorted(query_params.items())).encode()).hexdigest()}"
+
+            # Check if result is in cache
+            if cache_key in cache:
+                # Move to end (most recently used)
+                access_order.remove(cache_key)
+                access_order.append(cache_key)
+                return cache[cache_key]
+
+            # Execute function and cache result
+            result = func(*args, **kwargs)
+
+            # Manage cache size
+            if len(cache) >= maxsize:
+                # Remove least recently used item
+                oldest_key = access_order.pop(0)
+                del cache[oldest_key]
+
+            cache[cache_key] = result
+            access_order.append(cache_key)
+            return result
+
+        # Add cache clearing method
+        wrapper.clear_cache = lambda: cache.clear() or access_order.clear()
+        return wrapper
+    return decorator
 
 def load_data():
     """Load processed data and raw data"""
@@ -68,7 +106,7 @@ def favicon():
     return ('', 204)
 
 @app.route('/api/overview', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_overview():
     """Get overview statistics"""
     if processed_data and 'overview' in processed_data:
@@ -76,7 +114,7 @@ def get_overview():
     return jsonify({"error": "No data available"})
 
 @app.route('/api/domains', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_domains():
     """Get domain analysis"""
     if not raw_data:
@@ -119,7 +157,7 @@ def get_domains():
     return jsonify(result)
 
 @app.route('/api/sections', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_sections():
     """Get section analysis based on survey structure"""
     domain = request.args.get('domain', 'all')
@@ -177,7 +215,7 @@ def get_sections():
     return jsonify(section_data)
 
 @app.route('/api/sections/distributions', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_section_distributions():
     """Histogram distributions for each section score"""
     bins = int(request.args.get('bins', 20))
@@ -212,7 +250,7 @@ def get_section_distributions():
     return jsonify({'bins': edges, 'sections': dists})
 
 @app.route('/api/sections/correlation', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_sections_correlation():
     """Correlation matrix between section average scores per response"""
     if not raw_data:
@@ -249,7 +287,7 @@ def get_sections_correlation():
     return jsonify({'labels': labels, 'matrix': corr.tolist()})
 
 @app.route('/api/correlations', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_correlations():
     """Get correlation analysis between questions"""
     if not raw_data:
@@ -298,7 +336,7 @@ def get_correlations():
     return jsonify(correlations[:50])  # Return top 50 correlations
 
 @app.route('/api/organizations', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_organizations():
     """Get organization analysis data"""
     limit = int(request.args.get('limit', 20))
@@ -347,7 +385,7 @@ def get_organizations():
     return jsonify(result[:limit])
 
 @app.route('/api/demographics', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_demographics():
     """Get comprehensive demographic analysis"""
     demographic_type = request.args.get('type', 'all')
@@ -427,7 +465,7 @@ def get_demographics():
     return jsonify(result if demographic_type == 'all' else result.get(demographic_type, {}))
 
 @app.route('/api/metadata', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_metadata():
     """Get data metadata"""
     if processed_data and 'metadata' in processed_data:
@@ -435,7 +473,7 @@ def get_metadata():
     return jsonify({})
 
 @app.route('/api/data/paginated', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_paginated_data():
     """Get paginated raw data for virtual scrolling"""
     if not raw_data:
@@ -521,7 +559,7 @@ def stream_data():
                    headers={'Cache-Control': 'no-cache'})
 
 @app.route('/api/organizations/list', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_organizations_list():
     """Get list of organizations for filters"""
     if not raw_data:
@@ -533,7 +571,7 @@ def get_organizations_list():
     return jsonify([{'value': org, 'label': org} for org in organizations])
 
 @app.route('/api/domains/list', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_domains_list():
     """Get list of domains for filters"""
     if not raw_data:
@@ -545,7 +583,7 @@ def get_domains_list():
     return jsonify([{'value': domain, 'label': domain} for domain in domains])
 
 @app.route('/api/stats/quick', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_quick_stats():
     """Get quick stats for KPI cards"""
     start_time = time.time()
@@ -584,7 +622,7 @@ def get_quick_stats():
     })
 
 @app.route('/api/analytics/trend', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_trend_data():
     """Get trend data for charts"""
     days = int(request.args.get('days', 30))
@@ -635,7 +673,7 @@ def get_trend_data():
     })
 
 @app.route('/api/advanced/hierarchical', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_hierarchical_data():
     """Get hierarchical data for treemap and sunburst visualizations"""
     if not raw_data:
@@ -689,7 +727,7 @@ def get_hierarchical_data():
     return jsonify(result)
 
 @app.route('/api/advanced/sunburst', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_sunburst_data():
     """Sunburst-like nested counts: Domain > Position Level > Department"""
     if not raw_data:
@@ -724,7 +762,7 @@ def get_sunburst_data():
     return jsonify(results)
 
 @app.route('/api/advanced/ridge', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_ridge_data():
     """Ridge-like distribution data: for a given domain, per-section normalized histograms."""
     if not raw_data:
@@ -767,7 +805,7 @@ def get_ridge_data():
     return jsonify({'sections': result, 'x': centers})
 
 @app.route('/api/tenure/matrix', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_tenure_matrix():
     """Mean overall culture score heatmap for Domain x Tenure"""
     if not raw_data:
@@ -800,7 +838,7 @@ def get_tenure_matrix():
     return jsonify({'domains': domains, 'tenure': tenures, 'matrix': matrix})
 
 @app.route('/api/advanced/network', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_network_data():
     """Get organization network data for similarity analysis"""
     if not raw_data:
@@ -887,7 +925,7 @@ def _simple_kmeans(X, k=3, max_iters=100, seed=42):
     return labels, centroids, inertia
 
 @app.route('/api/advanced/clustering', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_clustering_data():
     """Get clustering analysis data for PCA and t-SNE visualizations"""
     if not raw_data:
@@ -982,7 +1020,7 @@ def get_clustering_data():
     return jsonify(result)
 
 @app.route('/api/organizations/summary', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_org_summary():
     """Department and position distributions for an organization"""
     org = request.args.get('organization', 'all')
@@ -1006,7 +1044,7 @@ def get_org_summary():
     })
 
 @app.route('/api/distributions/overall', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_overall_distribution():
     """Histogram for overall culture score, and per-domain distributions"""
     bins = int(request.args.get('bins', 20))
@@ -1034,7 +1072,7 @@ def get_overall_distribution():
     return jsonify({'bins': edges, 'overall': counts.tolist(), 'by_domain': per_domain})
 
 @app.route('/api/distributions/responses', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_response_distribution():
     """Histogram of response counts per organization (distribution of participation)."""
     bins = int(request.args.get('bins', 20))
@@ -1056,7 +1094,7 @@ def get_response_distribution():
     return jsonify({'bins': edges, 'counts': counts.tolist()})
 
 @app.route('/api/organizations/sections', methods=['GET'])
-@lru_cache(maxsize=128)
+@cache_with_request_params(maxsize=128)
 def get_organization_sections():
     """Get section analysis for specific organization"""
     org_name = request.args.get('organization', 'all')
