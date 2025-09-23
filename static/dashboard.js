@@ -2715,53 +2715,275 @@ class DashboardApp {
     }
 
     async generateStatisticalInsights() {
-        // Generate AI-powered insights for the Insights tab
+        // Generate HSEG-framework insights for investors and stakeholders
         const insightsContainer = document.getElementById('statisticalInsights');
         if (!insightsContainer) return;
 
         insightsContainer.innerHTML = `
             <div class="tab-loading">
                 <div class="spinner-border" role="status"></div>
-                <p>Generating statistical insights...</p>
+                <p>Analyzing cultural risk assessment data...</p>
             </div>
         `;
 
         try {
             const stats = await this.fetchWithCache('/api/stats/quick');
             const sections = await this.fetchWithCache('/api/sections');
+            const organizations = await this.fetchWithCache('/api/organizations?limit=1000');
 
-            const insights = this.calculateInsights(stats, sections);
+            const insights = this.calculateHSEGInsights(stats, sections, organizations);
 
             insightsContainer.innerHTML = `
-                <div class="row g-3">
-                    ${insights.map(insight => `
+                <div class="insights-header mb-4">
+                    <h4><i class="fas fa-chart-line me-2"></i>HSEG Cultural Risk Assessment - Executive Summary</h4>
+                    <p class="text-muted">Data-driven insights for stakeholder decision-making based on the five-tier HSEG assessment framework</p>
+                </div>
+
+                <!-- Executive Risk Dashboard -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-12">
+                        <div class="executive-risk-card">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Cultural Risk Portfolio Overview</h5>
+                            <div class="row g-3">
+                                ${insights.riskZones.map(zone => `
+                                    <div class="col-md-2">
+                                        <div class="risk-zone-card ${zone.cssClass}">
+                                            <div class="zone-header">${zone.icon} ${zone.name}</div>
+                                            <div class="zone-count">${zone.count}</div>
+                                            <div class="zone-percentage">${zone.percentage}%</div>
+                                            <div class="zone-description">${zone.description}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Investment Insights -->
+                <div class="row g-3 mb-4">
+                    ${insights.keyInsights.map(insight => `
                         <div class="col-md-6">
-                            <div class="insight-card">
+                            <div class="insight-card ${insight.priority}">
                                 <div class="insight-header">
                                     <i class="${insight.icon} insight-icon"></i>
                                     <h6>${insight.title}</h6>
+                                    <span class="priority-badge ${insight.priority}">${insight.priorityLabel}</span>
                                 </div>
                                 <div class="insight-body">
                                     <p>${insight.description}</p>
-                                    <div class="insight-metric">
-                                        <span class="metric-value">${insight.value}</span>
-                                        <span class="metric-label">${insight.label}</span>
+                                    <div class="insight-metrics">
+                                        <div class="metric-primary">
+                                            <span class="metric-value">${insight.value}</span>
+                                            <span class="metric-label">${insight.label}</span>
+                                        </div>
+                                        ${insight.secondaryMetric ? `
+                                            <div class="metric-secondary">
+                                                <small>${insight.secondaryMetric}</small>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="insight-impact">
+                                        <strong>Business Impact:</strong> ${insight.businessImpact}
+                                    </div>
+                                    <div class="insight-action">
+                                        <strong>Recommended Action:</strong> ${insight.recommendedAction}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     `).join('')}
                 </div>
+
+                <!-- Domain-Specific Analysis -->
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <div class="domain-analysis-card">
+                            <h5><i class="fas fa-building me-2"></i>Multi-Domain Risk Analysis</h5>
+                            <div class="domain-grid">
+                                ${insights.domainAnalysis.map(domain => `
+                                    <div class="domain-item ${domain.riskLevel}">
+                                        <div class="domain-header">
+                                            <h6>${domain.name}</h6>
+                                            <span class="risk-badge ${domain.riskLevel}">${domain.riskLabel}</span>
+                                        </div>
+                                        <div class="domain-metrics">
+                                            <div class="metric">Organizations: ${domain.orgCount}</div>
+                                            <div class="metric">Avg Score: ${domain.avgScore}</div>
+                                            <div class="metric">Risk Index: ${domain.riskIndex}</div>
+                                        </div>
+                                        <div class="domain-recommendation">
+                                            <strong>Priority:</strong> ${domain.recommendation}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
         } catch (error) {
-            console.error('Failed to generate insights:', error);
+            console.error('Failed to generate HSEG insights:', error);
             insightsContainer.innerHTML = `
-                <div class="alert alert-warning">
+                <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    Failed to generate insights. Please try again later.
+                    <strong>Risk Assessment Error:</strong> Unable to generate cultural risk insights.
+                    This may indicate data integrity issues requiring immediate attention.
                 </div>
             `;
         }
+    }
+
+    calculateHSEGInsights(stats, sections, organizations) {
+        // HSEG Five-Tier Assessment Framework
+        const riskZones = [
+            { name: 'Crisis', range: [1.0, 1.5], icon: '🔴', cssClass: 'crisis-zone', description: 'Immediate intervention required' },
+            { name: 'At Risk', range: [1.5, 2.0], icon: '🟠', cssClass: 'at-risk-zone', description: 'Early warning signs present' },
+            { name: 'Mixed', range: [2.0, 2.5], icon: '⚪', cssClass: 'mixed-zone', description: 'Inconsistent experiences' },
+            { name: 'Safe', range: [2.5, 3.0], icon: '🔵', cssClass: 'safe-zone', description: 'Generally healthy environment' },
+            { name: 'Thriving', range: [3.0, 4.0], icon: '🟢', cssClass: 'thriving-zone', description: 'Exemplary cultural practices' }
+        ];
+
+        // Calculate organization distribution across risk zones
+        const zoneDistribution = riskZones.map(zone => {
+            const count = organizations.filter(org =>
+                org.culture_score >= zone.range[0] && org.culture_score < zone.range[1]
+            ).length;
+            return {
+                ...zone,
+                count,
+                percentage: Math.round((count / organizations.length) * 100)
+            };
+        });
+
+        // Generate key insights for investors
+        const keyInsights = [];
+
+        // Crisis zone analysis
+        const crisisOrgs = organizations.filter(org => org.culture_score < 1.5);
+        if (crisisOrgs.length > 0) {
+            keyInsights.push({
+                title: 'Critical Risk Exposure',
+                priority: 'critical',
+                priorityLabel: 'CRITICAL',
+                icon: 'fas fa-exclamation-triangle',
+                description: `${crisisOrgs.length} organizations are in crisis zones with severely compromised cultural environments.`,
+                value: crisisOrgs.length,
+                label: 'Organizations in Crisis',
+                secondaryMetric: `${Math.round((crisisOrgs.length / organizations.length) * 100)}% of portfolio`,
+                businessImpact: 'High liability risk, potential regulatory action, employee exodus, reputation damage',
+                recommendedAction: 'Immediate leadership intervention, external cultural audit, crisis management plan'
+            });
+        }
+
+        // High-performing organizations
+        const thrivingOrgs = organizations.filter(org => org.culture_score >= 3.0);
+        keyInsights.push({
+            title: 'Cultural Excellence Leaders',
+            priority: 'opportunity',
+            priorityLabel: 'OPPORTUNITY',
+            icon: 'fas fa-trophy',
+            description: `${thrivingOrgs.length} organizations demonstrate exemplary cultural practices and can serve as benchmarks.`,
+            value: thrivingOrgs.length,
+            label: 'Thriving Organizations',
+            secondaryMetric: `${Math.round((thrivingOrgs.length / organizations.length) * 100)}% of portfolio`,
+            businessImpact: 'Talent retention, productivity gains, positive brand value, competitive advantage',
+            recommendedAction: 'Extract best practices, expand successful models, use as cultural mentors'
+        });
+
+        // Section-based risk analysis
+        const criticalSections = Object.entries(sections)
+            .filter(([_, data]) => data.overall_score < 2.0)
+            .sort((a, b) => a[1].overall_score - b[1].overall_score);
+
+        if (criticalSections.length > 0) {
+            const worstSection = criticalSections[0];
+            keyInsights.push({
+                title: 'Systemic Cultural Weakness',
+                priority: 'warning',
+                priorityLabel: 'WARNING',
+                icon: 'fas fa-exclamation',
+                description: `"${worstSection[0]}" shows the lowest scores across the portfolio, indicating systemic issues.`,
+                value: worstSection[1].overall_score.toFixed(2),
+                label: 'Risk Score',
+                secondaryMetric: `Affects ${worstSection[1].count || 'multiple'} organizations`,
+                businessImpact: 'Operational inefficiency, legal vulnerabilities, stakeholder confidence erosion',
+                recommendedAction: 'Targeted intervention programs, policy review, leadership accountability measures'
+            });
+        }
+
+        // Response volume and data quality
+        const totalResponses = stats.total_responses || organizations.reduce((sum, org) => sum + org.response_count, 0);
+        const avgResponsesPerOrg = Math.round(totalResponses / organizations.length);
+
+        keyInsights.push({
+            title: 'Assessment Coverage & Data Quality',
+            priority: avgResponsesPerOrg < 10 ? 'warning' : 'info',
+            priorityLabel: avgResponsesPerOrg < 10 ? 'CONCERN' : 'STABLE',
+            icon: 'fas fa-chart-bar',
+            description: `Assessment based on ${totalResponses} employee responses across ${organizations.length} organizations.`,
+            value: avgResponsesPerOrg,
+            label: 'Avg Responses/Org',
+            secondaryMetric: `${totalResponses} total responses`,
+            businessImpact: avgResponsesPerOrg < 10 ? 'Limited statistical reliability, potential blind spots' : 'Robust data foundation for decision-making',
+            recommendedAction: avgResponsesPerOrg < 10 ? 'Increase participation rates, expand survey reach' : 'Maintain current assessment frequency'
+        });
+
+        // Domain analysis
+        const domains = [...new Set(organizations.map(org => org.domain))];
+        const domainAnalysis = domains.map(domain => {
+            const domainOrgs = organizations.filter(org => org.domain === domain);
+            const avgScore = domainOrgs.reduce((sum, org) => sum + org.culture_score, 0) / domainOrgs.length;
+            const riskIndex = this.calculateRiskIndex(domainOrgs);
+
+            let riskLevel, riskLabel, recommendation;
+            if (avgScore < 2.0) {
+                riskLevel = 'high-risk';
+                riskLabel = 'HIGH RISK';
+                recommendation = 'Immediate sector-wide intervention required';
+            } else if (avgScore < 2.5) {
+                riskLevel = 'medium-risk';
+                riskLabel = 'MEDIUM RISK';
+                recommendation = 'Enhanced monitoring and targeted improvements';
+            } else {
+                riskLevel = 'low-risk';
+                riskLabel = 'STABLE';
+                recommendation = 'Maintain current practices, monitor for degradation';
+            }
+
+            return {
+                name: domain,
+                orgCount: domainOrgs.length,
+                avgScore: avgScore.toFixed(2),
+                riskIndex: riskIndex.toFixed(1),
+                riskLevel,
+                riskLabel,
+                recommendation
+            };
+        });
+
+        return {
+            riskZones: zoneDistribution,
+            keyInsights,
+            domainAnalysis
+        };
+    }
+
+    calculateRiskIndex(organizations) {
+        // Calculate a composite risk index based on score variance, response coverage, and trend
+        if (!organizations.length) return 0;
+
+        const scores = organizations.map(org => org.culture_score);
+        const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+        const variance = scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / scores.length;
+        const avgResponses = organizations.reduce((sum, org) => sum + org.response_count, 0) / organizations.length;
+
+        // Risk increases with lower scores, higher variance, and lower response counts
+        const scoreRisk = (4 - avgScore) * 25; // 0-75 points
+        const varianceRisk = Math.min(variance * 20, 20); // 0-20 points
+        const coverageRisk = Math.max(0, (10 - avgResponses) * 0.5); // 0-5 points
+
+        return Math.min(100, scoreRisk + varianceRisk + coverageRisk);
     }
 
     async setupClusteringChart() {
