@@ -721,7 +721,17 @@ class DashboardApp {
     async setupOrgBenchmarkChart() {
         try {
             console.log('Setting up org benchmark chart...');
-            const organizationsData = await this.fetchWithCache('/api/organizations?limit=100');
+            // Get current filter values
+            const filters = this.getOrganizationFilters();
+            const params = new URLSearchParams({
+                limit: '100',
+                min_responses: filters.minResponses.toString(),
+                domain: filters.domain,
+                score_range: filters.scoreRange,
+                size_filter: filters.sizeFilter
+            });
+
+            const organizationsData = await this.fetchWithCache(`/api/organizations?${params.toString()}`);
             const ctx = document.getElementById('orgBenchmarkChart');
 
             console.log('Org data:', organizationsData?.length || 0, 'items');
@@ -825,7 +835,17 @@ class DashboardApp {
 
     async setupOrgScatterChart() {
         try {
-            const organizationsData = await this.fetchWithCache('/api/organizations?limit=100');
+            // Get current filter values
+            const filters = this.getOrganizationFilters();
+            const params = new URLSearchParams({
+                limit: '100',
+                min_responses: filters.minResponses.toString(),
+                domain: filters.domain,
+                score_range: filters.scoreRange,
+                size_filter: filters.sizeFilter
+            });
+
+            const organizationsData = await this.fetchWithCache(`/api/organizations?${params.toString()}`);
             const ctx = document.getElementById('orgScatterChart');
 
             if (!ctx || !organizationsData) return;
@@ -903,7 +923,17 @@ class DashboardApp {
 
     async setupTopOrgsChart() {
         try {
-            const organizationsData = await this.fetchWithCache('/api/organizations?limit=100');
+            // Get current filter values
+            const filters = this.getOrganizationFilters();
+            const params = new URLSearchParams({
+                limit: '100',
+                min_responses: filters.minResponses.toString(),
+                domain: filters.domain,
+                score_range: filters.scoreRange,
+                size_filter: filters.sizeFilter
+            });
+
+            const organizationsData = await this.fetchWithCache(`/api/organizations?${params.toString()}`);
             const ctx = document.getElementById('topOrgsChart');
 
             if (!ctx || !organizationsData) return;
@@ -973,7 +1003,17 @@ class DashboardApp {
 
     async setupOrgSizeChart() {
         try {
-            const organizationsData = await this.fetchWithCache('/api/organizations?limit=100');
+            // Get current filter values
+            const filters = this.getOrganizationFilters();
+            const params = new URLSearchParams({
+                limit: '100',
+                min_responses: filters.minResponses.toString(),
+                domain: filters.domain,
+                score_range: filters.scoreRange,
+                size_filter: filters.sizeFilter
+            });
+
+            const organizationsData = await this.fetchWithCache(`/api/organizations?${params.toString()}`);
             const ctx = document.getElementById('orgSizeChart');
 
             if (!ctx || !organizationsData) return;

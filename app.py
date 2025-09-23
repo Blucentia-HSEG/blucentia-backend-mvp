@@ -338,8 +338,12 @@ def get_correlations():
 @app.route('/api/organizations', methods=['GET'])
 @cache_with_request_params(maxsize=128)
 def get_organizations():
-    """Get organization analysis data"""
+    """Get organization analysis data with advanced filtering"""
     limit = int(request.args.get('limit', 20))
+    min_responses = int(request.args.get('min_responses', 5))
+    domain_filter = request.args.get('domain', 'all')
+    score_range = request.args.get('score_range', 'all')
+    size_filter = request.args.get('size_filter', 'all')
 
     if not raw_data:
         return jsonify([])
@@ -350,10 +354,16 @@ def get_organizations():
     # Group by organization and calculate metrics
     for record in raw_data:
         org_name = record.get('organization_name', 'Unknown')
+        org_domain = record.get('domain', 'Unknown')
+
+        # Apply domain filter early
+        if domain_filter != 'all' and org_domain.lower() != domain_filter.lower():
+            continue
+
         if org_name not in org_data:
             org_data[org_name] = {
                 'name': org_name,
-                'domain': record.get('domain', 'Unknown'),
+                'domain': org_domain,
                 'employee_count': record.get('employee_count', 0),
                 'responses': [],
                 'culture_scores': []
@@ -366,15 +376,35 @@ def get_organizations():
             org_data[org_name]['culture_scores'].append(culture_score)
             org_data[org_name]['responses'].append(record)
 
-    # Calculate final metrics
+    # Calculate final metrics and apply filters
     result = []
     for org_name, data in org_data.items():
-        if len(data['culture_scores']) >= 5:  # Only include orgs with enough responses
+        if len(data['culture_scores']) >= min_responses:
             avg_score = sum(data['culture_scores']) / len(data['culture_scores'])
+            employee_count = data['employee_count']
+
+            # Apply size filter
+            if size_filter != 'all':
+                if size_filter == 'large' and employee_count < 1000:
+                    continue
+                elif size_filter == 'medium' and not (100 <= employee_count < 1000):
+                    continue
+                elif size_filter == 'small' and employee_count >= 100:
+                    continue
+
+            # Apply score range filter
+            if score_range != 'all':
+                if score_range == 'high' and avg_score < 3.0:
+                    continue
+                elif score_range == 'medium' and not (2.0 <= avg_score < 3.0):
+                    continue
+                elif score_range == 'low' and avg_score >= 2.0:
+                    continue
+
             result.append({
                 'name': org_name,
                 'domain': data['domain'],
-                'employee_count': data['employee_count'],
+                'employee_count': employee_count,
                 'response_count': len(data['responses']),
                 'culture_score': round(avg_score, 2),
                 'score_std': round(np.std(data['culture_scores']), 2) if len(data['culture_scores']) > 1 else 0
