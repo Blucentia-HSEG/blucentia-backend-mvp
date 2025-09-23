@@ -1,0 +1,1688 @@
+{
+  "overview": {
+    "total_responses": 49550,
+    "num_organizations": 55,
+    "num_domains": 3,
+    "num_departments": 6,
+    "overall_culture_score": 2.5313549215668285
+  },
+  "domains": {
+    "Business": {
+      "Power Abuse & Suppression_score": 2.604347222222222,
+      "Discrimination & Exclusion_score": 2.6078148148148146,
+      "Manipulative Work Culture_score": 2.607388888888889,
+      "Failure of Accountability_score": 2.6021944444444443,
+      "Mental Health Harm_score": 2.6050694444444447,
+      "Erosion of Voice & Autonomy_score": 2.6024861111111113
+    },
+    "Healthcare": {
+      "Power Abuse & Suppression_score": 2.471551246537396,
+      "Discrimination & Exclusion_score": 2.4732225300092336,
+      "Manipulative Work Culture_score": 2.471006463527239,
+      "Failure of Accountability_score": 2.4711495844875344,
+      "Mental Health Harm_score": 2.472825484764543,
+      "Erosion of Voice & Autonomy_score": 2.4718282548476456
+    },
+    "University": {
+      "Power Abuse & Suppression_score": 2.5135555555555555,
+      "Discrimination & Exclusion_score": 2.509777777777778,
+      "Manipulative Work Culture_score": 2.5143456790123455,
+      "Failure of Accountability_score": 2.5137407407407406,
+      "Mental Health Harm_score": 2.5138148148148147,
+      "Erosion of Voice & Autonomy_score": 2.512962962962963
+    }
+  },
+  "sections": {
+    "Power Abuse & Suppression_score": {
+      "Power Abuse & Suppression_score": 1.0,
+      "Discrimination & Exclusion_score": 0.37826836347889325,
+      "Manipulative Work Culture_score": 0.38068420142340087,
+      "Failure of Accountability_score": 0.40994779677781706,
+      "Mental Health Harm_score": 0.41680327606699596,
+      "Erosion of Voice & Autonomy_score": 0.4119033090562219
+    },
+    "Discrimination & Exclusion_score": {
+      "Power Abuse & Suppression_score": 0.37826836347889325,
+      "Discrimination & Exclusion_score": 1.0,
+      "Manipulative Work Culture_score": 0.3436160996934419,
+      "Failure of Accountability_score": 0.37670556044181636,
+      "Mental Health Harm_score": 0.3770471388387088,
+      "Erosion of Voice & Autonomy_score": 0.37535737296984667
+    },
+    "Manipulative Work Culture_score": {
+      "Power Abuse & Suppression_score": 0.38068420142340087,
+      "Discrimination & Exclusion_score": 0.3436160996934419,
+      "Manipulative Work Culture_score": 1.0,
+      "Failure of Accountability_score": 0.37777691476588054,
+      "Mental Health Harm_score": 0.38139052482829144,
+      "Erosion of Voice & Autonomy_score": 0.37068671567950456
+    },
+    "Failure of Accountability_score": {
+      "Power Abuse & Suppression_score": 0.40994779677781706,
+      "Discrimination & Exclusion_score": 0.37670556044181636,
+      "Manipulative Work Culture_score": 0.37777691476588054,
+      "Failure of Accountability_score": 1.0,
+      "Mental Health Harm_score": 0.4101903734733949,
+      "Erosion of Voice & Autonomy_score": 0.40942140577336505
+    },
+    "Mental Health Harm_score": {
+      "Power Abuse & Suppression_score": 0.41680327606699596,
+      "Discrimination & Exclusion_score": 0.3770471388387088,
+      "Manipulative Work Culture_score": 0.38139052482829144,
+      "Failure of Accountability_score": 0.4101903734733949,
+      "Mental Health Harm_score": 1.0,
+      "Erosion of Voice & Autonomy_score": 0.4125531481253547
+    },
+    "Erosion of Voice & Autonomy_score": {
+      "Power Abuse & Suppression_score": 0.4119033090562219,
+      "Discrimination & Exclusion_score": 0.37535737296984667,
+      "Manipulative Work Culture_score": 0.37068671567950456,
+      "Failure of Accountability_score": 0.40942140577336505,
+      "Mental Health Harm_score": 0.4125531481253547,
+      "Erosion of Voice & Autonomy_score": 1.0
+    }
+  },
+  "correlations": [
+    {
+      "Question 1": "q4",
+      "Question 2": "q17",
+      "Correlation": 0.15889204603648233
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q9",
+      "Correlation": 0.15791597463567533
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q4",
+      "Correlation": 0.15783008567240767
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q15",
+      "Correlation": 0.15755965917219292
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q15",
+      "Correlation": 0.15740968974915318
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q20",
+      "Correlation": 0.15722846859049133
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q2",
+      "Correlation": 0.15721632860544657
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q9",
+      "Correlation": 0.15697993990345344
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q15",
+      "Correlation": 0.15689155379742944
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q16",
+      "Correlation": 0.15667920357840853
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q6",
+      "Correlation": 0.15619713702932728
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q14",
+      "Correlation": 0.15605622281477585
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q10",
+      "Correlation": 0.15605258319257287
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q4",
+      "Correlation": 0.1560139296614196
+    },
+    {
+      "Question 1": "q13",
+      "Question 2": "q16",
+      "Correlation": 0.1557912964318004
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q20",
+      "Correlation": 0.155731493654512
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q16",
+      "Correlation": 0.15564661652021025
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q18",
+      "Correlation": 0.155574103451728
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q3",
+      "Correlation": 0.1554355349117272
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q16",
+      "Correlation": 0.1551084910524575
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q20",
+      "Correlation": 0.15501132993053163
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q18",
+      "Correlation": 0.15489667651103434
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q20",
+      "Correlation": 0.15489134532520163
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q13",
+      "Correlation": 0.15486390520787668
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q19",
+      "Correlation": 0.15482257364220656
+    },
+    {
+      "Question 1": "q14",
+      "Question 2": "q18",
+      "Correlation": 0.1545192630801525
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q9",
+      "Correlation": 0.15446097991327282
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q18",
+      "Correlation": 0.15436773676197785
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q7",
+      "Correlation": 0.15436359247665157
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q9",
+      "Correlation": 0.15436300519286314
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q14",
+      "Correlation": 0.1543277518610423
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q19",
+      "Correlation": 0.15429491387054764
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q5",
+      "Correlation": 0.15428808709598668
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q16",
+      "Correlation": 0.15411208966873835
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q13",
+      "Correlation": 0.1538604536494441
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q9",
+      "Correlation": 0.15375678572824353
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q13",
+      "Correlation": 0.15360792378772645
+    },
+    {
+      "Question 1": "q18",
+      "Question 2": "q20",
+      "Correlation": 0.1535398967882638
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q10",
+      "Correlation": 0.15324850313535426
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q20",
+      "Correlation": 0.15316505214178927
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q11",
+      "Correlation": 0.1531489518913742
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q12",
+      "Correlation": 0.15311448254737875
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q16",
+      "Correlation": 0.15310963723287677
+    },
+    {
+      "Question 1": "q20",
+      "Question 2": "q21",
+      "Correlation": 0.15308287196193252
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q16",
+      "Correlation": 0.15306635045401498
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q11",
+      "Correlation": 0.15292800953951574
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q13",
+      "Correlation": 0.15291526594550703
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q16",
+      "Correlation": 0.15283915055902156
+    },
+    {
+      "Question 1": "q13",
+      "Question 2": "q20",
+      "Correlation": 0.15277312842791635
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q22",
+      "Correlation": 0.15267403980649444
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q22",
+      "Correlation": 0.15266624837793633
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q16",
+      "Correlation": 0.15259528598894403
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q9",
+      "Correlation": 0.15255224560404318
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q15",
+      "Correlation": 0.15252324402937772
+    },
+    {
+      "Question 1": "q15",
+      "Question 2": "q16",
+      "Correlation": 0.15249058929117726
+    },
+    {
+      "Question 1": "q20",
+      "Question 2": "q22",
+      "Correlation": 0.15230574671311606
+    },
+    {
+      "Question 1": "q13",
+      "Question 2": "q22",
+      "Correlation": 0.15226677253241072
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q19",
+      "Correlation": 0.15223207568469788
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q7",
+      "Correlation": 0.1522200673625883
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q14",
+      "Correlation": 0.1521702977466063
+    },
+    {
+      "Question 1": "q16",
+      "Question 2": "q18",
+      "Correlation": 0.15207656546497006
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q11",
+      "Correlation": 0.1520541511488966
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q18",
+      "Correlation": 0.15193301079958388
+    },
+    {
+      "Question 1": "q13",
+      "Question 2": "q14",
+      "Correlation": 0.1519323524393241
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q15",
+      "Correlation": 0.15181280364282984
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q20",
+      "Correlation": 0.1517663462216312
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q21",
+      "Correlation": 0.15173252850670915
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q6",
+      "Correlation": 0.15167901324913383
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q17",
+      "Correlation": 0.15165277577104164
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q13",
+      "Correlation": 0.1516299840225153
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q21",
+      "Correlation": 0.15159083499233203
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q5",
+      "Correlation": 0.15155216903631902
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q11",
+      "Correlation": 0.15145863162304404
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q5",
+      "Correlation": 0.15141780531654067
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q22",
+      "Correlation": 0.1514010850020583
+    },
+    {
+      "Question 1": "q17",
+      "Question 2": "q19",
+      "Correlation": 0.15132693913773249
+    },
+    {
+      "Question 1": "q16",
+      "Question 2": "q19",
+      "Correlation": 0.15122872798025516
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q21",
+      "Correlation": 0.15119301190022985
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q10",
+      "Correlation": 0.15116815878746964
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q15",
+      "Correlation": 0.15114675737164252
+    },
+    {
+      "Question 1": "q15",
+      "Question 2": "q18",
+      "Correlation": 0.15113063108215585
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q17",
+      "Correlation": 0.1511246421043809
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q8",
+      "Correlation": 0.15109499157908735
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q13",
+      "Correlation": 0.1510564849401393
+    },
+    {
+      "Question 1": "q15",
+      "Question 2": "q21",
+      "Correlation": 0.15097578130184425
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q14",
+      "Correlation": 0.1509568440877961
+    },
+    {
+      "Question 1": "q17",
+      "Question 2": "q22",
+      "Correlation": 0.15092948343804102
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q14",
+      "Correlation": 0.15087918033528666
+    },
+    {
+      "Question 1": "q16",
+      "Question 2": "q20",
+      "Correlation": 0.15079693772822636
+    },
+    {
+      "Question 1": "q14",
+      "Question 2": "q15",
+      "Correlation": 0.1507798133688645
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q17",
+      "Correlation": 0.15074720965224886
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q4",
+      "Correlation": 0.15072407919540726
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q13",
+      "Correlation": 0.15060881965833786
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q12",
+      "Correlation": 0.15058359869266702
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q11",
+      "Correlation": 0.15057138091572844
+    },
+    {
+      "Question 1": "q14",
+      "Question 2": "q16",
+      "Correlation": 0.15053785380868612
+    },
+    {
+      "Question 1": "q18",
+      "Question 2": "q22",
+      "Correlation": 0.15053219567155648
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q16",
+      "Correlation": 0.15050295861849966
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q18",
+      "Correlation": 0.15048946436820515
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q15",
+      "Correlation": 0.15043164253245908
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q17",
+      "Correlation": 0.15031159722981588
+    },
+    {
+      "Question 1": "q15",
+      "Question 2": "q19",
+      "Correlation": 0.15029959165639453
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q19",
+      "Correlation": 0.1502900896343703
+    },
+    {
+      "Question 1": "q18",
+      "Question 2": "q19",
+      "Correlation": 0.15025238336092916
+    },
+    {
+      "Question 1": "q17",
+      "Question 2": "q21",
+      "Correlation": 0.15022795297653083
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q14",
+      "Correlation": 0.15021511392332998
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q17",
+      "Correlation": 0.15021135859949364
+    },
+    {
+      "Question 1": "q14",
+      "Question 2": "q19",
+      "Correlation": 0.15014956504808188
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q12",
+      "Correlation": 0.14983286465947207
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q10",
+      "Correlation": 0.1497980813548759
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q18",
+      "Correlation": 0.14978037972370667
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q20",
+      "Correlation": 0.1496167051616551
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q19",
+      "Correlation": 0.14959729162850555
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q16",
+      "Correlation": 0.14959632740110562
+    },
+    {
+      "Question 1": "q14",
+      "Question 2": "q22",
+      "Correlation": 0.14958879002826087
+    },
+    {
+      "Question 1": "q16",
+      "Question 2": "q22",
+      "Correlation": 0.14956995770099518
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q7",
+      "Correlation": 0.14956175206484315
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q6",
+      "Correlation": 0.14955212050726802
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q12",
+      "Correlation": 0.1495431339412834
+    },
+    {
+      "Question 1": "q19",
+      "Question 2": "q20",
+      "Correlation": 0.1495118742144951
+    },
+    {
+      "Question 1": "q21",
+      "Question 2": "q22",
+      "Correlation": 0.14947532315924925
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q21",
+      "Correlation": 0.14943190810088217
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q18",
+      "Correlation": 0.14941102829320277
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q7",
+      "Correlation": 0.14938203601012268
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q15",
+      "Correlation": 0.14927061847793982
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q21",
+      "Correlation": 0.14923228285422618
+    },
+    {
+      "Question 1": "q13",
+      "Question 2": "q15",
+      "Correlation": 0.14906225301424508
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q8",
+      "Correlation": 0.1490367275262138
+    },
+    {
+      "Question 1": "q19",
+      "Question 2": "q21",
+      "Correlation": 0.14899535042262943
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q18",
+      "Correlation": 0.14896469125500628
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q6",
+      "Correlation": 0.14895462031855278
+    },
+    {
+      "Question 1": "q15",
+      "Question 2": "q17",
+      "Correlation": 0.14894218741786705
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q21",
+      "Correlation": 0.1489097777676615
+    },
+    {
+      "Question 1": "q16",
+      "Question 2": "q17",
+      "Correlation": 0.14880435507306988
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q13",
+      "Correlation": 0.14875216350061699
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q21",
+      "Correlation": 0.14873119609701047
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q13",
+      "Correlation": 0.14866491485630523
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q15",
+      "Correlation": 0.1486542535128349
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q19",
+      "Correlation": 0.148572281097582
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q14",
+      "Correlation": 0.1485640381309587
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q12",
+      "Correlation": 0.14843630330652136
+    },
+    {
+      "Question 1": "q14",
+      "Question 2": "q21",
+      "Correlation": 0.14838592096065098
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q7",
+      "Correlation": 0.1483838317853871
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q11",
+      "Correlation": 0.14830879880092285
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q17",
+      "Correlation": 0.14829014930803344
+    },
+    {
+      "Question 1": "q13",
+      "Question 2": "q18",
+      "Correlation": 0.14817296165453794
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q20",
+      "Correlation": 0.14810822191740897
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q19",
+      "Correlation": 0.14810794123020138
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q12",
+      "Correlation": 0.14809496446783119
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q13",
+      "Correlation": 0.14808157101417732
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q14",
+      "Correlation": 0.14797338991795211
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q20",
+      "Correlation": 0.14796534594877594
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q12",
+      "Correlation": 0.14792009910867635
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q17",
+      "Correlation": 0.14759246160674547
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q16",
+      "Correlation": 0.1474976999772821
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q14",
+      "Correlation": 0.1473874845974818
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q8",
+      "Correlation": 0.14738024572364045
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q10",
+      "Correlation": 0.14732463915124558
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q8",
+      "Correlation": 0.14731721687826943
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q19",
+      "Correlation": 0.14731272446643653
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q21",
+      "Correlation": 0.14725161386281474
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q6",
+      "Correlation": 0.1472505182698481
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q11",
+      "Correlation": 0.14714857397789113
+    },
+    {
+      "Question 1": "q14",
+      "Question 2": "q20",
+      "Correlation": 0.1471138190307157
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q8",
+      "Correlation": 0.14709867507701815
+    },
+    {
+      "Question 1": "q17",
+      "Question 2": "q20",
+      "Correlation": 0.14694757208246062
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q19",
+      "Correlation": 0.14694118966767386
+    },
+    {
+      "Question 1": "q16",
+      "Question 2": "q21",
+      "Correlation": 0.14683748443987904
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q14",
+      "Correlation": 0.1467251218815824
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q11",
+      "Correlation": 0.14661925203366233
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q10",
+      "Correlation": 0.14660488270104302
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q17",
+      "Correlation": 0.14654407844011852
+    },
+    {
+      "Question 1": "q15",
+      "Question 2": "q20",
+      "Correlation": 0.1464626946342097
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q22",
+      "Correlation": 0.1464194176910346
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q22",
+      "Correlation": 0.1462097094874118
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q12",
+      "Correlation": 0.14613340705975997
+    },
+    {
+      "Question 1": "q18",
+      "Question 2": "q21",
+      "Correlation": 0.14609861974489574
+    },
+    {
+      "Question 1": "q17",
+      "Question 2": "q18",
+      "Correlation": 0.1460603315665574
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q22",
+      "Correlation": 0.14604388012191108
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q5",
+      "Correlation": 0.14587909259859266
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q10",
+      "Correlation": 0.14576820649670902
+    },
+    {
+      "Question 1": "q13",
+      "Question 2": "q21",
+      "Correlation": 0.14570765701931568
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q12",
+      "Correlation": 0.14569803220625357
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q19",
+      "Correlation": 0.1456691116460094
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q22",
+      "Correlation": 0.145657865962741
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q20",
+      "Correlation": 0.1456532742388894
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q10",
+      "Correlation": 0.1456465067662946
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q17",
+      "Correlation": 0.14555320083501122
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q13",
+      "Correlation": 0.14546966749061563
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q10",
+      "Correlation": 0.14542168092674995
+    },
+    {
+      "Question 1": "q5",
+      "Question 2": "q18",
+      "Correlation": 0.14535673375842353
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q15",
+      "Correlation": 0.14532779719721753
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q11",
+      "Correlation": 0.14529477368588695
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q11",
+      "Correlation": 0.145213419055512
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q9",
+      "Correlation": 0.14512520890314348
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q3",
+      "Correlation": 0.14510658980349572
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q20",
+      "Correlation": 0.14506626393381664
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q21",
+      "Correlation": 0.14502977412895737
+    },
+    {
+      "Question 1": "q11",
+      "Question 2": "q18",
+      "Correlation": 0.14495206496429977
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q19",
+      "Correlation": 0.1448543599793353
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q17",
+      "Correlation": 0.14476923456752394
+    },
+    {
+      "Question 1": "q3",
+      "Question 2": "q19",
+      "Correlation": 0.14476738869735317
+    },
+    {
+      "Question 1": "q15",
+      "Question 2": "q22",
+      "Correlation": 0.144723891271806
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q12",
+      "Correlation": 0.14470556041546212
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q22",
+      "Correlation": 0.14457681726066896
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q15",
+      "Correlation": 0.1445650139282928
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q8",
+      "Correlation": 0.14453274942774177
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q22",
+      "Correlation": 0.14400809279267887
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q9",
+      "Correlation": 0.14400023731654207
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q18",
+      "Correlation": 0.14395513893063877
+    },
+    {
+      "Question 1": "q9",
+      "Question 2": "q21",
+      "Correlation": 0.14356346279515916
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q22",
+      "Correlation": 0.14350138389693815
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q16",
+      "Correlation": 0.14347793163044703
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q13",
+      "Correlation": 0.1434025431996279
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q15",
+      "Correlation": 0.14325983426314312
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q21",
+      "Correlation": 0.143199143281127
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q8",
+      "Correlation": 0.14312703345472816
+    },
+    {
+      "Question 1": "q1",
+      "Question 2": "q14",
+      "Correlation": 0.14303568090615187
+    },
+    {
+      "Question 1": "q13",
+      "Question 2": "q17",
+      "Correlation": 0.14301506830219665
+    },
+    {
+      "Question 1": "q4",
+      "Question 2": "q18",
+      "Correlation": 0.14288361034210478
+    },
+    {
+      "Question 1": "q13",
+      "Question 2": "q19",
+      "Correlation": 0.14269716204724758
+    },
+    {
+      "Question 1": "q14",
+      "Question 2": "q17",
+      "Correlation": 0.1422873561953611
+    },
+    {
+      "Question 1": "q6",
+      "Question 2": "q14",
+      "Correlation": 0.14219423873402007
+    },
+    {
+      "Question 1": "q19",
+      "Question 2": "q22",
+      "Correlation": 0.14207609163075943
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q20",
+      "Correlation": 0.14122130813388642
+    },
+    {
+      "Question 1": "q10",
+      "Question 2": "q22",
+      "Correlation": 0.14114796583671746
+    },
+    {
+      "Question 1": "q8",
+      "Question 2": "q22",
+      "Correlation": 0.14100153816852046
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q21",
+      "Correlation": 0.14088020924672565
+    },
+    {
+      "Question 1": "q2",
+      "Question 2": "q7",
+      "Correlation": 0.14075020100033536
+    },
+    {
+      "Question 1": "q7",
+      "Question 2": "q12",
+      "Correlation": 0.1406911623989985
+    },
+    {
+      "Question 1": "q12",
+      "Question 2": "q17",
+      "Correlation": 0.1398233509139775
+    }
+  ],
+  "organizations": {
+    "Adobe": {
+      "Power Abuse & Suppression_score": 2.5725,
+      "Discrimination & Exclusion_score": 2.6296296296296293,
+      "Manipulative Work Culture_score": 2.604814814814815,
+      "Failure of Accountability_score": 2.5955555555555554,
+      "Mental Health Harm_score": 2.591111111111111,
+      "Erosion of Voice & Autonomy_score": 2.6119444444444446
+    },
+    "Advocate Aurora Health": {
+      "Power Abuse & Suppression_score": 2.4775,
+      "Discrimination & Exclusion_score": 2.481481481481482,
+      "Manipulative Work Culture_score": 2.494814814814815,
+      "Failure of Accountability_score": 2.4805555555555556,
+      "Mental Health Harm_score": 2.4855555555555555,
+      "Erosion of Voice & Autonomy_score": 2.485
+    },
+    "Airbnb": {
+      "Power Abuse & Suppression_score": 2.6019444444444444,
+      "Discrimination & Exclusion_score": 2.626296296296296,
+      "Manipulative Work Culture_score": 2.5692592592592596,
+      "Failure of Accountability_score": 2.6180555555555554,
+      "Mental Health Harm_score": 2.596388888888889,
+      "Erosion of Voice & Autonomy_score": 2.616111111111111
+    },
+    "Amazon": {
+      "Power Abuse & Suppression_score": 2.5669444444444443,
+      "Discrimination & Exclusion_score": 2.562222222222222,
+      "Manipulative Work Culture_score": 2.57,
+      "Failure of Accountability_score": 2.5875,
+      "Mental Health Harm_score": 2.549722222222222,
+      "Erosion of Voice & Autonomy_score": 2.573611111111111
+    },
+    "Apple": {
+      "Power Abuse & Suppression_score": 2.6075,
+      "Discrimination & Exclusion_score": 2.6244444444444444,
+      "Manipulative Work Culture_score": 2.614814814814815,
+      "Failure of Accountability_score": 2.6380555555555554,
+      "Mental Health Harm_score": 2.616111111111111,
+      "Erosion of Voice & Autonomy_score": 2.600277777777778
+    },
+    "Ascension Health": {
+      "Power Abuse & Suppression_score": 2.466666666666667,
+      "Discrimination & Exclusion_score": 2.494074074074074,
+      "Manipulative Work Culture_score": 2.4633333333333334,
+      "Failure of Accountability_score": 2.4705555555555554,
+      "Mental Health Harm_score": 2.475277777777778,
+      "Erosion of Voice & Autonomy_score": 2.4844444444444442
+    },
+    "Atrium Health": {
+      "Power Abuse & Suppression_score": 2.452777777777778,
+      "Discrimination & Exclusion_score": 2.477037037037037,
+      "Manipulative Work Culture_score": 2.445185185185185,
+      "Failure of Accountability_score": 2.4466666666666668,
+      "Mental Health Harm_score": 2.468888888888889,
+      "Erosion of Voice & Autonomy_score": 2.4530555555555558
+    },
+    "Baylor Scott & White": {
+      "Power Abuse & Suppression_score": 2.4755555555555557,
+      "Discrimination & Exclusion_score": 2.474814814814815,
+      "Manipulative Work Culture_score": 2.4585185185185185,
+      "Failure of Accountability_score": 2.452777777777778,
+      "Mental Health Harm_score": 2.475,
+      "Erosion of Voice & Autonomy_score": 2.4719444444444445
+    },
+    "Carnegie Mellon University": {
+      "Power Abuse & Suppression_score": 2.5080555555555555,
+      "Discrimination & Exclusion_score": 2.531111111111111,
+      "Manipulative Work Culture_score": 2.5011111111111113,
+      "Failure of Accountability_score": 2.5144444444444445,
+      "Mental Health Harm_score": 2.537777777777778,
+      "Erosion of Voice & Autonomy_score": 2.518611111111111
+    },
+    "Cisco": {
+      "Power Abuse & Suppression_score": 2.6294444444444443,
+      "Discrimination & Exclusion_score": 2.622592592592593,
+      "Manipulative Work Culture_score": 2.6185185185185182,
+      "Failure of Accountability_score": 2.6141666666666667,
+      "Mental Health Harm_score": 2.5941666666666667,
+      "Erosion of Voice & Autonomy_score": 2.582222222222222
+    },
+    "Cleveland Clinic": {
+      "Power Abuse & Suppression_score": 2.4846153846153847,
+      "Discrimination & Exclusion_score": 2.4472527472527474,
+      "Manipulative Work Culture_score": 2.474725274725275,
+      "Failure of Accountability_score": 2.4574175824175826,
+      "Mental Health Harm_score": 2.4695054945054946,
+      "Erosion of Voice & Autonomy_score": 2.4865384615384616
+    },
+    "Columbia University": {
+      "Power Abuse & Suppression_score": 2.5083333333333333,
+      "Discrimination & Exclusion_score": 2.504074074074074,
+      "Manipulative Work Culture_score": 2.4692592592592595,
+      "Failure of Accountability_score": 2.4747222222222223,
+      "Mental Health Harm_score": 2.4677777777777776,
+      "Erosion of Voice & Autonomy_score": 2.4677777777777776
+    },
+    "CommonSpirit Health": {
+      "Power Abuse & Suppression_score": 2.4491666666666667,
+      "Discrimination & Exclusion_score": 2.493333333333333,
+      "Manipulative Work Culture_score": 2.4574074074074073,
+      "Failure of Accountability_score": 2.473611111111111,
+      "Mental Health Harm_score": 2.488888888888889,
+      "Erosion of Voice & Autonomy_score": 2.4825
+    },
+    "Duke University": {
+      "Power Abuse & Suppression_score": 2.5102777777777776,
+      "Discrimination & Exclusion_score": 2.492592592592593,
+      "Manipulative Work Culture_score": 2.503703703703704,
+      "Failure of Accountability_score": 2.5036111111111112,
+      "Mental Health Harm_score": 2.5425,
+      "Erosion of Voice & Autonomy_score": 2.5030555555555556
+    },
+    "Geisinger Health": {
+      "Power Abuse & Suppression_score": 2.470833333333333,
+      "Discrimination & Exclusion_score": 2.462962962962963,
+      "Manipulative Work Culture_score": 2.4877777777777776,
+      "Failure of Accountability_score": 2.4783333333333335,
+      "Mental Health Harm_score": 2.435277777777778,
+      "Erosion of Voice & Autonomy_score": 2.4747222222222223
+    },
+    "Google": {
+      "Power Abuse & Suppression_score": 2.596388888888889,
+      "Discrimination & Exclusion_score": 2.5885185185185184,
+      "Manipulative Work Culture_score": 2.6196296296296295,
+      "Failure of Accountability_score": 2.5675,
+      "Mental Health Harm_score": 2.6144444444444446,
+      "Erosion of Voice & Autonomy_score": 2.6166666666666667
+    },
+    "HCA Healthcare": {
+      "Power Abuse & Suppression_score": 2.4975274725274725,
+      "Discrimination & Exclusion_score": 2.4479853479853477,
+      "Manipulative Work Culture_score": 2.474358974358974,
+      "Failure of Accountability_score": 2.497802197802198,
+      "Mental Health Harm_score": 2.4725274725274726,
+      "Erosion of Voice & Autonomy_score": 2.4604395604395606
+    },
+    "Harvard University": {
+      "Power Abuse & Suppression_score": 2.519722222222222,
+      "Discrimination & Exclusion_score": 2.4785185185185186,
+      "Manipulative Work Culture_score": 2.5070370370370374,
+      "Failure of Accountability_score": 2.5102777777777776,
+      "Mental Health Harm_score": 2.4991666666666665,
+      "Erosion of Voice & Autonomy_score": 2.544722222222222
+    },
+    "IBM": {
+      "Power Abuse & Suppression_score": 2.6197222222222223,
+      "Discrimination & Exclusion_score": 2.624074074074074,
+      "Manipulative Work Culture_score": 2.6196296296296295,
+      "Failure of Accountability_score": 2.5947222222222224,
+      "Mental Health Harm_score": 2.6094444444444442,
+      "Erosion of Voice & Autonomy_score": 2.6077777777777778
+    },
+    "Intel": {
+      "Power Abuse & Suppression_score": 2.5975,
+      "Discrimination & Exclusion_score": 2.6244444444444444,
+      "Manipulative Work Culture_score": 2.594074074074074,
+      "Failure of Accountability_score": 2.587222222222222,
+      "Mental Health Harm_score": 2.5994444444444444,
+      "Erosion of Voice & Autonomy_score": 2.606388888888889
+    },
+    "Intermountain Healthcare": {
+      "Power Abuse & Suppression_score": 2.471111111111111,
+      "Discrimination & Exclusion_score": 2.464074074074074,
+      "Manipulative Work Culture_score": 2.4581481481481484,
+      "Failure of Accountability_score": 2.442222222222222,
+      "Mental Health Harm_score": 2.4319444444444445,
+      "Erosion of Voice & Autonomy_score": 2.464166666666667
+    },
+    "Johns Hopkins Medicine": {
+      "Power Abuse & Suppression_score": 2.4359890109890108,
+      "Discrimination & Exclusion_score": 2.465934065934066,
+      "Manipulative Work Culture_score": 2.48974358974359,
+      "Failure of Accountability_score": 2.4626373626373628,
+      "Mental Health Harm_score": 2.473076923076923,
+      "Erosion of Voice & Autonomy_score": 2.462912087912088
+    },
+    "Kaiser Permanente": {
+      "Power Abuse & Suppression_score": 2.4782967032967034,
+      "Discrimination & Exclusion_score": 2.4677655677655674,
+      "Manipulative Work Culture_score": 2.4589743589743587,
+      "Failure of Accountability_score": 2.4653846153846155,
+      "Mental Health Harm_score": 2.4571428571428573,
+      "Erosion of Voice & Autonomy_score": 2.4615384615384617
+    },
+    "MIT": {
+      "Power Abuse & Suppression_score": 2.5436111111111113,
+      "Discrimination & Exclusion_score": 2.526666666666667,
+      "Manipulative Work Culture_score": 2.555925925925926,
+      "Failure of Accountability_score": 2.5094444444444446,
+      "Mental Health Harm_score": 2.5388888888888888,
+      "Erosion of Voice & Autonomy_score": 2.4905555555555554
+    },
+    "Mass General Brigham": {
+      "Power Abuse & Suppression_score": 2.4788888888888887,
+      "Discrimination & Exclusion_score": 2.484074074074074,
+      "Manipulative Work Culture_score": 2.4588888888888887,
+      "Failure of Accountability_score": 2.4675,
+      "Mental Health Harm_score": 2.4611111111111112,
+      "Erosion of Voice & Autonomy_score": 2.457222222222222
+    },
+    "Mayo Clinic": {
+      "Power Abuse & Suppression_score": 2.492032967032967,
+      "Discrimination & Exclusion_score": 2.4761904761904763,
+      "Manipulative Work Culture_score": 2.476923076923077,
+      "Failure of Accountability_score": 2.4684065934065935,
+      "Mental Health Harm_score": 2.4782967032967034,
+      "Erosion of Voice & Autonomy_score": 2.4804945054945056
+    },
+    "Meta": {
+      "Power Abuse & Suppression_score": 2.608888888888889,
+      "Discrimination & Exclusion_score": 2.6133333333333333,
+      "Manipulative Work Culture_score": 2.618148148148148,
+      "Failure of Accountability_score": 2.598611111111111,
+      "Mental Health Harm_score": 2.581111111111111,
+      "Erosion of Voice & Autonomy_score": 2.59
+    },
+    "Microsoft": {
+      "Power Abuse & Suppression_score": 2.5844444444444443,
+      "Discrimination & Exclusion_score": 2.622962962962963,
+      "Manipulative Work Culture_score": 2.5725925925925925,
+      "Failure of Accountability_score": 2.573888888888889,
+      "Mental Health Harm_score": 2.62,
+      "Erosion of Voice & Autonomy_score": 2.6044444444444443
+    },
+    "NYU": {
+      "Power Abuse & Suppression_score": 2.5194444444444444,
+      "Discrimination & Exclusion_score": 2.503703703703704,
+      "Manipulative Work Culture_score": 2.534074074074074,
+      "Failure of Accountability_score": 2.526111111111111,
+      "Mental Health Harm_score": 2.5319444444444446,
+      "Erosion of Voice & Autonomy_score": 2.5241666666666664
+    },
+    "Netflix": {
+      "Power Abuse & Suppression_score": 2.6225,
+      "Discrimination & Exclusion_score": 2.597777777777778,
+      "Manipulative Work Culture_score": 2.6496296296296293,
+      "Failure of Accountability_score": 2.6475,
+      "Mental Health Harm_score": 2.6277777777777778,
+      "Erosion of Voice & Autonomy_score": 2.6222222222222222
+    },
+    "NewYork-Presbyterian": {
+      "Power Abuse & Suppression_score": 2.4563888888888887,
+      "Discrimination & Exclusion_score": 2.4503703703703708,
+      "Manipulative Work Culture_score": 2.468148148148148,
+      "Failure of Accountability_score": 2.4669444444444446,
+      "Mental Health Harm_score": 2.492777777777778,
+      "Erosion of Voice & Autonomy_score": 2.450277777777778
+    },
+    "Northwell Health": {
+      "Power Abuse & Suppression_score": 2.4630555555555556,
+      "Discrimination & Exclusion_score": 2.465925925925926,
+      "Manipulative Work Culture_score": 2.491111111111111,
+      "Failure of Accountability_score": 2.4844444444444442,
+      "Mental Health Harm_score": 2.477777777777778,
+      "Erosion of Voice & Autonomy_score": 2.46
+    },
+    "Northwestern University": {
+      "Power Abuse & Suppression_score": 2.5091666666666668,
+      "Discrimination & Exclusion_score": 2.524814814814815,
+      "Manipulative Work Culture_score": 2.5033333333333334,
+      "Failure of Accountability_score": 2.482222222222222,
+      "Mental Health Harm_score": 2.518611111111111,
+      "Erosion of Voice & Autonomy_score": 2.5
+    },
+    "Nvidia": {
+      "Power Abuse & Suppression_score": 2.5794444444444444,
+      "Discrimination & Exclusion_score": 2.588888888888889,
+      "Manipulative Work Culture_score": 2.6092592592592596,
+      "Failure of Accountability_score": 2.608888888888889,
+      "Mental Health Harm_score": 2.611388888888889,
+      "Erosion of Voice & Autonomy_score": 2.6119444444444446
+    },
+    "Oracle": {
+      "Power Abuse & Suppression_score": 2.602777777777778,
+      "Discrimination & Exclusion_score": 2.5892592592592596,
+      "Manipulative Work Culture_score": 2.6218518518518517,
+      "Failure of Accountability_score": 2.576388888888889,
+      "Mental Health Harm_score": 2.611388888888889,
+      "Erosion of Voice & Autonomy_score": 2.6044444444444443
+    },
+    "Orlando Health": {
+      "Power Abuse & Suppression_score": 2.4719444444444445,
+      "Discrimination & Exclusion_score": 2.4718518518518517,
+      "Manipulative Work Culture_score": 2.4492592592592595,
+      "Failure of Accountability_score": 2.4658333333333333,
+      "Mental Health Harm_score": 2.4811111111111113,
+      "Erosion of Voice & Autonomy_score": 2.4722222222222223
+    },
+    "PayPal": {
+      "Power Abuse & Suppression_score": 2.609166666666667,
+      "Discrimination & Exclusion_score": 2.5862962962962963,
+      "Manipulative Work Culture_score": 2.616296296296296,
+      "Failure of Accountability_score": 2.5716666666666668,
+      "Mental Health Harm_score": 2.617777777777778,
+      "Erosion of Voice & Autonomy_score": 2.5894444444444447
+    },
+    "Princeton University": {
+      "Power Abuse & Suppression_score": 2.4988888888888887,
+      "Discrimination & Exclusion_score": 2.512592592592593,
+      "Manipulative Work Culture_score": 2.5188888888888887,
+      "Failure of Accountability_score": 2.55,
+      "Mental Health Harm_score": 2.5125,
+      "Erosion of Voice & Autonomy_score": 2.522777777777778
+    },
+    "Providence Health": {
+      "Power Abuse & Suppression_score": 2.4480555555555554,
+      "Discrimination & Exclusion_score": 2.465185185185185,
+      "Manipulative Work Culture_score": 2.514074074074074,
+      "Failure of Accountability_score": 2.4505555555555554,
+      "Mental Health Harm_score": 2.4433333333333334,
+      "Erosion of Voice & Autonomy_score": 2.4477777777777776
+    },
+    "Salesforce": {
+      "Power Abuse & Suppression_score": 2.6213888888888888,
+      "Discrimination & Exclusion_score": 2.583703703703704,
+      "Manipulative Work Culture_score": 2.6207407407407404,
+      "Failure of Accountability_score": 2.62,
+      "Mental Health Harm_score": 2.6533333333333333,
+      "Erosion of Voice & Autonomy_score": 2.6005555555555557
+    },
+    "Slack": {
+      "Power Abuse & Suppression_score": 2.6075,
+      "Discrimination & Exclusion_score": 2.6166666666666667,
+      "Manipulative Work Culture_score": 2.6125925925925926,
+      "Failure of Accountability_score": 2.607222222222222,
+      "Mental Health Harm_score": 2.607222222222222,
+      "Erosion of Voice & Autonomy_score": 2.6155555555555554
+    },
+    "SpaceX": {
+      "Power Abuse & Suppression_score": 2.6280555555555556,
+      "Discrimination & Exclusion_score": 2.6255555555555556,
+      "Manipulative Work Culture_score": 2.63,
+      "Failure of Accountability_score": 2.627222222222222,
+      "Mental Health Harm_score": 2.6130555555555555,
+      "Erosion of Voice & Autonomy_score": 2.6119444444444446
+    },
+    "Stanford University": {
+      "Power Abuse & Suppression_score": 2.4891666666666667,
+      "Discrimination & Exclusion_score": 2.5303703703703704,
+      "Manipulative Work Culture_score": 2.5192592592592593,
+      "Failure of Accountability_score": 2.5213888888888887,
+      "Mental Health Harm_score": 2.51,
+      "Erosion of Voice & Autonomy_score": 2.5119444444444445
+    },
+    "Sutter Health": {
+      "Power Abuse & Suppression_score": 2.470833333333333,
+      "Discrimination & Exclusion_score": 2.485925925925926,
+      "Manipulative Work Culture_score": 2.4537037037037037,
+      "Failure of Accountability_score": 2.503888888888889,
+      "Mental Health Harm_score": 2.4827777777777778,
+      "Erosion of Voice & Autonomy_score": 2.483611111111111
+    },
+    "Tesla": {
+      "Power Abuse & Suppression_score": 2.6105555555555555,
+      "Discrimination & Exclusion_score": 2.5922222222222224,
+      "Manipulative Work Culture_score": 2.5914814814814817,
+      "Failure of Accountability_score": 2.593611111111111,
+      "Mental Health Harm_score": 2.6005555555555557,
+      "Erosion of Voice & Autonomy_score": 2.5833333333333335
+    },
+    "Texas Health Resources": {
+      "Power Abuse & Suppression_score": 2.5119444444444445,
+      "Discrimination & Exclusion_score": 2.504074074074074,
+      "Manipulative Work Culture_score": 2.4685185185185183,
+      "Failure of Accountability_score": 2.526666666666667,
+      "Mental Health Harm_score": 2.496111111111111,
+      "Erosion of Voice & Autonomy_score": 2.515833333333333
+    },
+    "UPMC": {
+      "Power Abuse & Suppression_score": 2.4775,
+      "Discrimination & Exclusion_score": 2.484814814814815,
+      "Manipulative Work Culture_score": 2.476296296296296,
+      "Failure of Accountability_score": 2.4608333333333334,
+      "Mental Health Harm_score": 2.5102777777777776,
+      "Erosion of Voice & Autonomy_score": 2.4819444444444443
+    },
+    "Uber": {
+      "Power Abuse & Suppression_score": 2.6255555555555556,
+      "Discrimination & Exclusion_score": 2.602222222222222,
+      "Manipulative Work Culture_score": 2.587037037037037,
+      "Failure of Accountability_score": 2.620277777777778,
+      "Mental Health Harm_score": 2.5927777777777776,
+      "Erosion of Voice & Autonomy_score": 2.595833333333333
+    },
+    "University of California System": {
+      "Power Abuse & Suppression_score": 2.5316666666666667,
+      "Discrimination & Exclusion_score": 2.542962962962963,
+      "Manipulative Work Culture_score": 2.551111111111111,
+      "Failure of Accountability_score": 2.53,
+      "Mental Health Harm_score": 2.543888888888889,
+      "Erosion of Voice & Autonomy_score": 2.5677777777777777
+    },
+    "University of Chicago": {
+      "Power Abuse & Suppression_score": 2.5166666666666666,
+      "Discrimination & Exclusion_score": 2.488888888888889,
+      "Manipulative Work Culture_score": 2.5455555555555556,
+      "Failure of Accountability_score": 2.533333333333333,
+      "Mental Health Harm_score": 2.4991666666666665,
+      "Erosion of Voice & Autonomy_score": 2.5269444444444447
+    },
+    "University of Michigan": {
+      "Power Abuse & Suppression_score": 2.495277777777778,
+      "Discrimination & Exclusion_score": 2.48,
+      "Manipulative Work Culture_score": 2.473333333333333,
+      "Failure of Accountability_score": 2.488611111111111,
+      "Mental Health Harm_score": 2.5108333333333333,
+      "Erosion of Voice & Autonomy_score": 2.47
+    },
+    "University of Pennsylvania": {
+      "Power Abuse & Suppression_score": 2.4902777777777776,
+      "Discrimination & Exclusion_score": 2.508888888888889,
+      "Manipulative Work Culture_score": 2.5055555555555555,
+      "Failure of Accountability_score": 2.5122222222222224,
+      "Mental Health Harm_score": 2.4833333333333334,
+      "Erosion of Voice & Autonomy_score": 2.5094444444444446
+    },
+    "University of Texas System": {
+      "Power Abuse & Suppression_score": 2.5505555555555555,
+      "Discrimination & Exclusion_score": 2.51,
+      "Manipulative Work Culture_score": 2.533333333333333,
+      "Failure of Accountability_score": 2.540277777777778,
+      "Mental Health Harm_score": 2.506111111111111,
+      "Erosion of Voice & Autonomy_score": 2.5369444444444444
+    },
+    "Yale University": {
+      "Power Abuse & Suppression_score": 2.5122222222222224,
+      "Discrimination & Exclusion_score": 2.5114814814814816,
+      "Manipulative Work Culture_score": 2.4937037037037038,
+      "Failure of Accountability_score": 2.5094444444444446,
+      "Mental Health Harm_score": 2.504722222222222,
+      "Erosion of Voice & Autonomy_score": 2.499722222222222
+    },
+    "Zoom": {
+      "Power Abuse & Suppression_score": 2.5947222222222224,
+      "Discrimination & Exclusion_score": 2.635185185185185,
+      "Manipulative Work Culture_score": 2.607407407407407,
+      "Failure of Accountability_score": 2.595833333333333,
+      "Mental Health Harm_score": 2.5941666666666667,
+      "Erosion of Voice & Autonomy_score": 2.605
+    }
+  },
+  "demographics": [],
+  "metadata": {
+    "timestamp": "2025-09-23T15:25:34.808040"
+  }
+}
