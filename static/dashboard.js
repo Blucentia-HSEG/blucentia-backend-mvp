@@ -56,6 +56,30 @@ class DashboardApp {
         };
     }
 
+    enhanceChartWithZoom(chartOptions, chartType = 'default') {
+        // Add zoom functionality to any Chart.js chart options
+        if (!chartOptions.plugins) chartOptions.plugins = {};
+        if (!chartOptions.plugins.zoom) {
+            chartOptions.plugins.zoom = this.getZoomOptions(chartType);
+        }
+
+        // Add zoom reset button to legend
+        if (!chartOptions.plugins.legend) chartOptions.plugins.legend = {};
+        if (!chartOptions.plugins.legend.onClick) {
+            const originalOnClick = chartOptions.plugins.legend.onClick;
+            chartOptions.plugins.legend.onClick = function(e, legendItem, legend) {
+                if (e.ctrlKey) {
+                    // Ctrl+click legend to reset zoom
+                    legend.chart.resetZoom();
+                    return;
+                }
+                if (originalOnClick) originalOnClick.call(this, e, legendItem, legend);
+            };
+        }
+
+        return chartOptions;
+    }
+
     init() {
         try {
             this.showLoadingOverlay();
@@ -355,55 +379,61 @@ class DashboardApp {
                 this.charts.trendChart.destroy();
             }
 
+            // Create chart with zoom functionality
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: '#2563eb',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        min: 1.5,
+                        max: 3.0,
+                        ticks: { stepSize: 0.25 }
+                    }
+                },
+                elements: {
+                    point: {
+                        radius: 4,
+                        hoverRadius: 6
+                    }
+                }
+            };
+
+            // Enhance with zoom functionality
+            this.enhanceChartWithZoom(chartOptions, 'line');
+
             this.charts.trendChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: trendData.labels,
                     datasets: trendData.datasets || []
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: 'white',
-                            bodyColor: 'white',
-                            borderColor: '#2563eb',
-                            borderWidth: 1
-                        }
-                    },
-                    scales: {
-                        x: {
-                            display: true,
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            display: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            },
-                            min: 1.5,
-                            max: 3.0,
-                            ticks: { stepSize: 0.25 }
-                        }
-                    },
-                    elements: {
-                        point: {
-                            radius: 4,
-                            hoverRadius: 6
-                        }
-                    }
-                }
+                options: chartOptions
             });
         } catch (error) {
             console.error('Failed to setup trend chart:', error);
@@ -922,42 +952,48 @@ class DashboardApp {
                 });
             });
 
-            this.charts.orgScatterChart = new Chart(ctx, {
-                type: 'bubble',
-                data: { datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Response Count' }
-                        },
-                        y: {
-                            title: { display: true, text: 'Culture Score' },
-                            min: 1,
-                            max: 4
-                        }
+            // Create chart with enhanced zoom functionality
+            const scatterOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Response Count' }
                     },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const orgIndex = context.dataIndex;
-                                    const domain = context.dataset.label;
-                                    const domainOrgs = filtered.filter(org => org.domain === domain);
-                                    const org = domainOrgs[orgIndex];
-                                    return [
-                                        `${org.name}`,
-                                        `Domain: ${org.domain}`,
-                                        `Culture Score: ${org.culture_score}`,
-                                        `Responses: ${org.response_count}`,
-                                        `Employees: ${org.employee_count}`
-                                    ];
-                                }
+                    y: {
+                        title: { display: true, text: 'Culture Score' },
+                        min: 1,
+                        max: 4
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const orgIndex = context.dataIndex;
+                                const domain = context.dataset.label;
+                                const domainOrgs = filtered.filter(org => org.domain === domain);
+                                const org = domainOrgs[orgIndex];
+                                return [
+                                    `${org.name}`,
+                                    `Domain: ${org.domain}`,
+                                    `Culture Score: ${org.culture_score}`,
+                                    `Responses: ${org.response_count}`,
+                                    `Employees: ${org.employee_count}`
+                                ];
                             }
                         }
                     }
                 }
+            };
+
+            // Enhance with zoom functionality for scatter charts
+            this.enhanceChartWithZoom(scatterOptions, 'scatter');
+
+            this.charts.orgScatterChart = new Chart(ctx, {
+                type: 'bubble',
+                data: { datasets },
+                options: scatterOptions
             });
         } catch (error) {
             console.error('Failed to setup org scatter chart:', error);
