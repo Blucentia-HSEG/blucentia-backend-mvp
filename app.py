@@ -65,6 +65,109 @@ def cache_with_request_params(maxsize=128):
         return wrapper
     return decorator
 
+# HSEG Scoring Framework Constants
+HSEG_CATEGORIES = {
+    'Power Abuse & Suppression': {
+        'questions': ['q1', 'q2', 'q3', 'q4'],
+        'weight': 3.0,
+        'risk_level': 'Critical'
+    },
+    'Failure of Accountability': {
+        'questions': ['q11', 'q12', 'q13', 'q14'],
+        'weight': 3.0,
+        'risk_level': 'Critical'
+    },
+    'Discrimination & Exclusion': {
+        'questions': ['q5', 'q6', 'q7'],
+        'weight': 2.5,
+        'risk_level': 'Severe'
+    },
+    'Mental Health Harm': {
+        'questions': ['q15', 'q16', 'q17', 'q18'],
+        'weight': 2.5,
+        'risk_level': 'Severe'
+    },
+    'Manipulative Work Culture': {
+        'questions': ['q8', 'q9', 'q10'],
+        'weight': 2.0,
+        'risk_level': 'Moderate'
+    },
+    'Erosion of Voice & Autonomy': {
+        'questions': ['q19', 'q20', 'q21', 'q22'],
+        'weight': 2.0,
+        'risk_level': 'Moderate'
+    }
+}
+
+HSEG_TIERS = {
+    'Crisis': {'range': (7, 12), 'color': '#ef4444', 'description': 'Immediate Action Required', 'icon': '🔴'},
+    'At Risk': {'range': (13, 16), 'color': '#f97316', 'description': 'Preventive Intervention Needed', 'icon': '🟠'},
+    'Mixed': {'range': (17, 20), 'color': '#6b7280', 'description': 'Strategic Improvement Focus', 'icon': '⚫'},
+    'Safe': {'range': (21, 24), 'color': '#3b82f6', 'description': 'Optimization and Maintenance', 'icon': '🔵'},
+    'Thriving': {'range': (25, 28), 'color': '#22c55e', 'description': 'Excellence and Innovation', 'icon': '🟢'}
+}
+
+def calculate_hseg_score(record):
+    """Calculate HSEG weighted score for a single record"""
+    total_weighted_score = 0
+
+    for category_name, category_info in HSEG_CATEGORIES.items():
+        questions = category_info['questions']
+        weight = category_info['weight']
+
+        # Get scores for this category
+        scores = [record.get(q, 0) for q in questions if record.get(q) is not None]
+        if scores:
+            category_avg = sum(scores) / len(scores)
+            category_weighted_score = category_avg * weight
+            total_weighted_score += category_weighted_score
+
+    # Normalize to 28-point scale (max possible: 55.5, min possible: 13.875)
+    normalized_score = (total_weighted_score / 55.5) * 28
+    return round(normalized_score, 1)
+
+def get_hseg_tier(score):
+    """Get HSEG tier classification for a score"""
+    for tier_name, tier_info in HSEG_TIERS.items():
+        min_score, max_score = tier_info['range']
+        if min_score <= score <= max_score:
+            return {
+                'tier': tier_name,
+                'color': tier_info['color'],
+                'description': tier_info['description'],
+                'icon': tier_info['icon'],
+                'score': score
+            }
+
+    # Fallback for edge cases
+    if score < 7:
+        return {'tier': 'Crisis', 'color': '#ef4444', 'description': 'Critical', 'icon': '🔴', 'score': score}
+    else:
+        return {'tier': 'Thriving', 'color': '#22c55e', 'description': 'Exceptional', 'icon': '🟢', 'score': score}
+
+def calculate_category_scores(record):
+    """Calculate individual category scores for a record"""
+    category_scores = {}
+
+    for category_name, category_info in HSEG_CATEGORIES.items():
+        questions = category_info['questions']
+        weight = category_info['weight']
+
+        scores = [record.get(q, 0) for q in questions if record.get(q) is not None]
+        if scores:
+            category_avg = sum(scores) / len(scores)
+            category_weighted_score = category_avg * weight
+
+            category_scores[category_name] = {
+                'average': round(category_avg, 2),
+                'weighted_score': round(category_weighted_score, 2),
+                'weight': weight,
+                'question_count': len(scores),
+                'risk_level': category_info['risk_level']
+            }
+
+    return category_scores
+
 def load_data():
     """Load processed data and raw data"""
     global processed_data, raw_data
@@ -137,11 +240,10 @@ def get_domains():
         domain_data[domain]['organizations'].add(record.get('organization_name', 'Unknown'))
         domain_data[domain]['departments'].add(record.get('department', 'Unknown'))
 
-        # Calculate culture score
-        scores = [record.get(f'q{i}', 0) for i in range(1, 23) if record.get(f'q{i}') is not None]
-        if scores:
-            culture_score = sum(scores) / len(scores)
-            domain_data[domain]['culture_scores'].append(culture_score)
+        # Calculate HSEG weighted culture score
+        hseg_score = calculate_hseg_score(record)
+        if hseg_score > 0:
+            domain_data[domain]['culture_scores'].append(hseg_score)
 
     # Convert to final format
     result = {}
@@ -165,15 +267,8 @@ def get_sections():
     if not raw_data:
         return jsonify({})
 
-    # Define survey sections as per hseg_comprehensive_analysis.py
-    sections = {
-        'Power Abuse & Suppression': ['q1', 'q2', 'q3', 'q4'],
-        'Discrimination & Exclusion': ['q5', 'q6', 'q7'],
-        'Manipulative Work Culture': ['q8', 'q9', 'q10'],
-        'Failure of Accountability': ['q11', 'q12', 'q13', 'q14'],
-        'Mental Health Harm': ['q15', 'q16', 'q17', 'q18'],
-        'Erosion of Voice & Autonomy': ['q19', 'q20', 'q21', 'q22']
-    }
+    # Use HSEG Categories for consistent scoring
+    sections = {name: info['questions'] for name, info in HSEG_CATEGORIES.items()}
 
     # Calculate section scores
     section_data = {}
@@ -200,13 +295,29 @@ def get_sections():
                 domain_scores[record_domain].append(section_score)
 
         if section_scores:
+            # Calculate raw average score (1-4 scale) for radar charts
+            raw_avg = sum(section_scores) / len(section_scores)
+
+            # Calculate weighted HSEG contribution for this category
+            category_info = HSEG_CATEGORIES[section_name]
+            weighted_contribution = raw_avg * category_info['weight']
+
+            # Calculate what this represents as a percentage of max possible weighted score
+            max_weighted_for_category = 4 * category_info['weight']
+            weighted_percentage = (weighted_contribution / max_weighted_for_category) * 100
+
             section_data[section_name] = {
-                'overall_score': round(sum(section_scores) / len(section_scores), 3),
+                'overall_score': round(raw_avg, 3),  # Keep for compatibility with existing radar charts
+                'weighted_score': round(weighted_contribution, 3),  # New: weighted HSEG contribution
+                'weighted_percentage': round(weighted_percentage, 1),  # New: percentage of category max
+                'category_weight': category_info['weight'],  # New: category weight
+                'risk_level': category_info['risk_level'],  # New: risk classification
                 'overall_std': round(np.std(section_scores), 3),
                 'count': len(section_scores),
                 'domain_breakdown': {
                     domain: {
                         'avg_score': round(sum(scores) / len(scores), 3),
+                        'weighted_score': round((sum(scores) / len(scores)) * category_info['weight'], 3),
                         'count': len(scores)
                     } for domain, scores in domain_scores.items() if scores
                 }
@@ -238,14 +349,29 @@ def get_section_distributions():
             if scores:
                 section_scores[name].append(sum(scores) / len(scores))
 
-    edges = np.linspace(1, 4, bins + 1).tolist()
+    # Update to use HSEG scores instead of raw section scores
+    hseg_scores_by_section = defaultdict(list)
+    for record in raw_data:
+        hseg_score = calculate_hseg_score(record)
+        if hseg_score > 0:
+            # Calculate which section scores contribute most to overall HSEG score
+            category_contributions = calculate_category_scores(record)
+            for section_name in sections.keys():
+                if section_name in category_contributions:
+                    # Use weighted contribution to HSEG score
+                    contrib = category_contributions[section_name]['weighted_score']
+                    hseg_scores_by_section[section_name].append(hseg_score)
+
+    # Use 28-point scale for HSEG distribution
+    edges = np.linspace(7, 28, bins + 1).tolist()
     dists = {}
-    for name, scores in section_scores.items():
-        counts, _ = np.histogram(scores, bins=bins, range=(1, 4))
-        dists[name] = {
-            'bins': edges,
-            'counts': counts.tolist()
-        }
+    for name, scores in hseg_scores_by_section.items():
+        if scores:
+            counts, _ = np.histogram(scores, bins=bins, range=(7, 28))
+            dists[name] = {
+                'bins': edges,
+                'counts': counts.tolist()
+            }
 
     return jsonify({'bins': edges, 'sections': dists})
 
@@ -369,11 +495,10 @@ def get_organizations():
                 'culture_scores': []
             }
 
-        # Calculate culture score for this response
-        scores = [record.get(f'q{i}', 0) for i in range(1, 23) if record.get(f'q{i}') is not None]
-        if scores:
-            culture_score = sum(scores) / len(scores)
-            org_data[org_name]['culture_scores'].append(culture_score)
+        # Calculate HSEG weighted culture score for this response
+        hseg_score = calculate_hseg_score(record)
+        if hseg_score > 0:
+            org_data[org_name]['culture_scores'].append(hseg_score)
             org_data[org_name]['responses'].append(record)
 
     # Calculate final metrics and apply filters
@@ -471,11 +596,10 @@ def get_demographics():
                 demographic_data[demo_value]['domains'][domain] = 0
             demographic_data[demo_value]['domains'][domain] += 1
 
-            # Calculate culture score
-            scores = [record.get(f'q{i}', 0) for i in range(1, 23) if record.get(f'q{i}') is not None]
-            if scores:
-                culture_score = sum(scores) / len(scores)
-                demographic_data[demo_value]['culture_scores'].append(culture_score)
+            # Calculate HSEG weighted culture score
+            hseg_score = calculate_hseg_score(record)
+            if hseg_score > 0:
+                demographic_data[demo_value]['culture_scores'].append(hseg_score)
 
         # Calculate summary statistics
         summary = {}
@@ -547,7 +671,7 @@ def get_paginated_data():
             'department': record.get('department'),
             'position_level': record.get('position_level'),
             'submission_date': record.get('submission_date'),
-            'culture_score': round(sum([record.get(f'q{i}', 0) for i in range(1, 23)]) / 22, 2)
+            'culture_score': calculate_hseg_score(record)
         }
         formatted_data.append(formatted_record)
 
@@ -626,17 +750,14 @@ def get_quick_stats():
     organizations = len(set(record.get('organization_name') for record in raw_data if record.get('organization_name')))
     domains = len(set(record.get('domain') for record in raw_data if record.get('domain')))
 
-    # Calculate average culture score
-    total_score = 0
-    valid_responses = 0
-
+    # Calculate average HSEG weighted culture score
+    hseg_scores = []
     for record in raw_data:
-        scores = [record.get(f'q{i}', 0) for i in range(1, 23) if record.get(f'q{i}') is not None]
-        if scores:
-            total_score += sum(scores) / len(scores)
-            valid_responses += 1
+        hseg_score = calculate_hseg_score(record)
+        if hseg_score > 0:
+            hseg_scores.append(hseg_score)
 
-    avg_culture_score = round(total_score / valid_responses, 2) if valid_responses > 0 else 0
+    avg_culture_score = round(sum(hseg_scores) / len(hseg_scores), 1) if hseg_scores else 0
 
     # Calculate response time
     response_time = round((time.time() - start_time) * 1000, 1)
@@ -699,17 +820,22 @@ def get_trend_data():
                 if metric == 'response_count':
                     date_scores[date_key].append(1)
                 elif metric == 'section_scores':
-                    # Calculate section scores for this record
+                    # Calculate HSEG weighted section scores for this record
                     for section_name, questions in sections.items():
                         scores = [record.get(q, 0) for q in questions if record.get(q) is not None]
                         if scores:
-                            section_score = sum(scores) / len(scores)
-                            section_date_scores[section_name][date_key].append(section_score)
+                            category_avg = sum(scores) / len(scores)
+                            # Apply HSEG weighting to get proper scale
+                            category_weight = HSEG_CATEGORIES.get(section_name, {}).get('weight', 1.0)
+                            weighted_score = category_avg * category_weight
+                            # Convert to HSEG scale: each category contributes to the overall 28-point scale
+                            # The weighted score should be normalized to show its contribution
+                            hseg_contribution = (weighted_score / 55.5) * 28
+                            section_date_scores[section_name][date_key].append(round(hseg_contribution, 2))
                 else:  # culture_score
-                    scores = [record.get(f'q{i}', 0) for i in range(1, 23) if record.get(f'q{i}') is not None]
-                    if scores:
-                        avg_score = sum(scores) / len(scores)
-                        date_scores[date_key].append(avg_score)
+                    hseg_score = calculate_hseg_score(record)
+                    if hseg_score > 0:
+                        date_scores[date_key].append(hseg_score)
             except:
                 pass
 
@@ -815,11 +941,10 @@ def get_hierarchical_data():
 
         hierarchy[domain][org][dept]['count'] += 1
 
-        # Calculate culture score
-        scores = [record.get(f'q{i}', 0) for i in range(1, 23) if record.get(f'q{i}') is not None]
-        if scores:
-            culture_score = sum(scores) / len(scores)
-            hierarchy[domain][org][dept]['culture_scores'].append(culture_score)
+        # Calculate HSEG weighted culture score
+        hseg_score = calculate_hseg_score(record)
+        if hseg_score > 0:
+            hierarchy[domain][org][dept]['culture_scores'].append(hseg_score)
 
     # Convert to flat array for visualization
     result = []
@@ -1015,14 +1140,23 @@ def get_network_data():
             if scores:
                 avg_scores[q] = sum(scores) / len(scores)
 
-        overall_score = sum(avg_scores.values()) / len(avg_scores) if avg_scores else 0
+        # Calculate HSEG score for the organization
+        org_hseg_scores = []
+        # Get all records for this organization and calculate HSEG scores
+        for record in raw_data:
+            if record.get('organization_name') == org:
+                hseg_score = calculate_hseg_score(record)
+                if hseg_score > 0:
+                    org_hseg_scores.append(hseg_score)
+
+        overall_score = sum(org_hseg_scores) / len(org_hseg_scores) if org_hseg_scores else 0
 
         nodes.append({
             'id': org,
             'domain': data['domain'],
             'employee_count': data['employee_count'],
             'responses': data['responses'],
-            'culture_score': round(overall_score, 2),
+            'culture_score': round(overall_score, 1),
             'size': min(50, max(10, data['responses'] / 10))  # Scale for visualization
         })
 
@@ -1087,10 +1221,18 @@ def get_clustering_data():
 
         if valid_row:
             data_matrix.append(row)
+
+            # Calculate HSEG score for this record
+            hseg_score = calculate_hseg_score(record)
+            hseg_tier_info = get_hseg_tier(hseg_score)
+
             labels.append({
                 'domain': record.get('domain', 'Unknown'),
                 'organization': record.get('organization_name', 'Unknown'),
-                'department': record.get('department', 'Unknown')
+                'department': record.get('department', 'Unknown'),
+                'hseg_score': round(hseg_score, 2),
+                'hseg_tier': hseg_tier_info['tier'],
+                'hseg_tier_info': hseg_tier_info
             })
 
     if len(data_matrix) < 100:  # Need sufficient data
@@ -1141,7 +1283,10 @@ def get_clustering_data():
                 'y': float(pca_result[i, 1]),
                 'domain': labels[i]['domain'],
                 'organization': labels[i]['organization'],
-                'department': labels[i]['department']
+                'department': labels[i]['department'],
+                'hseg_score': labels[i]['hseg_score'],
+                'hseg_tier': labels[i]['hseg_tier'],
+                'hseg_tier_info': labels[i]['hseg_tier_info']
             }
             for i in range(len(pca_result))
         ],
@@ -1151,7 +1296,17 @@ def get_clustering_data():
             'pc2': [float(eigenvectors[i, 1]) for i in range(len(questions))],
             'questions': questions
         },
-        'elbow': inertias
+        'elbow': inertias,
+        'hseg_context': {
+            'tier_counts': {tier: sum(1 for label in labels if label['hseg_tier'] == tier)
+                          for tier in ['Crisis', 'At Risk', 'Mixed', 'Safe', 'Thriving']},
+            'score_stats': {
+                'min': min([labels[i]['hseg_score'] for i in range(len(labels))]),
+                'max': max([labels[i]['hseg_score'] for i in range(len(labels))]),
+                'mean': round(sum([labels[i]['hseg_score'] for i in range(len(labels))]) / len(labels), 2)
+            },
+            'total_samples': len(labels)
+        }
     }
 
     return jsonify(result)
@@ -1199,12 +1354,25 @@ def get_overall_distribution():
         d = r.get('domain') or 'Unknown'
         by_domain[d].append(s)
 
-    edges = np.linspace(1,4,bins+1).tolist()
-    counts, _ = np.histogram(scores, bins=bins, range=(1,4))
+    # Update to use HSEG scoring for distribution analysis
+    hseg_scores = []
+    hseg_by_domain = defaultdict(list)
+
+    for record in raw_data:
+        hseg_score = calculate_hseg_score(record)
+        if hseg_score > 0:
+            hseg_scores.append(hseg_score)
+            domain = record.get('domain') or 'Unknown'
+            hseg_by_domain[domain].append(hseg_score)
+
+    # Use 28-point HSEG scale instead of 1-4 scale
+    edges = np.linspace(7, 28, bins + 1).tolist()
+    counts, _ = np.histogram(hseg_scores, bins=bins, range=(7, 28))
     per_domain = {}
-    for d, arr in by_domain.items():
-        c, _ = np.histogram(arr, bins=bins, range=(1,4))
-        per_domain[d] = c.tolist()
+    for d, arr in hseg_by_domain.items():
+        if arr:
+            c, _ = np.histogram(arr, bins=bins, range=(7, 28))
+            per_domain[d] = c.tolist()
 
     return jsonify({'bins': edges, 'overall': counts.tolist(), 'by_domain': per_domain})
 
@@ -1239,15 +1407,8 @@ def get_organization_sections():
     if not raw_data:
         return jsonify({})
 
-    # Define survey sections as per hseg_comprehensive_analysis.py
-    sections = {
-        'Power Abuse & Suppression': ['q1', 'q2', 'q3', 'q4'],
-        'Discrimination & Exclusion': ['q5', 'q6', 'q7'],
-        'Manipulative Work Culture': ['q8', 'q9', 'q10'],
-        'Failure of Accountability': ['q11', 'q12', 'q13', 'q14'],
-        'Mental Health Harm': ['q15', 'q16', 'q17', 'q18'],
-        'Erosion of Voice & Autonomy': ['q19', 'q20', 'q21', 'q22']
-    }
+    # Use HSEG Categories for consistent scoring
+    sections = {name: info['questions'] for name, info in HSEG_CATEGORIES.items()}
 
     # Filter data for specific organization
     if org_name.lower() == 'all':
@@ -1294,6 +1455,146 @@ def refresh_data():
         return jsonify({"success": True, "message": "Data refreshed successfully"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
+@app.route('/api/insights/hseg', methods=['GET'])
+@cache_with_request_params(maxsize=32)
+def get_hseg_insights():
+    """Get comprehensive HSEG framework insights"""
+    if not raw_data:
+        return jsonify({})
+
+    domain_filter = request.args.get('domain', 'all')
+    org_filter = request.args.get('organization', 'all')
+
+    # Filter data
+    filtered_data = raw_data
+    if domain_filter.lower() != 'all':
+        filtered_data = [r for r in filtered_data if r.get('domain', '').lower() == domain_filter.lower()]
+    if org_filter.lower() != 'all':
+        filtered_data = [r for r in filtered_data if r.get('organization_name', '').lower() == org_filter.lower()]
+
+    if not filtered_data:
+        return jsonify({'error': 'No data available for filters'})
+
+    # Calculate overall HSEG scores and tier distribution
+    hseg_scores = []
+    tier_distribution = {tier: 0 for tier in HSEG_TIERS.keys()}
+    category_scores = {cat: [] for cat in HSEG_CATEGORIES.keys()}
+
+    for record in filtered_data:
+        # Calculate HSEG score
+        hseg_score = calculate_hseg_score(record)
+        if hseg_score > 0:
+            hseg_scores.append(hseg_score)
+
+            # Get tier classification
+            tier_info = get_hseg_tier(hseg_score)
+            tier_distribution[tier_info['tier']] += 1
+
+            # Calculate category scores
+            for category_name, category_info in HSEG_CATEGORIES.items():
+                questions = category_info['questions']
+                scores = [record.get(q, 0) for q in questions if record.get(q) is not None]
+                if scores:
+                    category_avg = sum(scores) / len(scores)
+                    category_scores[category_name].append(category_avg)
+
+    # Calculate summary statistics
+    if not hseg_scores:
+        return jsonify({'error': 'No valid scores found'})
+
+    overall_score = sum(hseg_scores) / len(hseg_scores)
+    overall_tier = get_hseg_tier(overall_score)
+
+    # Calculate category insights
+    category_insights = {}
+    for category_name, scores in category_scores.items():
+        if scores:
+            category_info = HSEG_CATEGORIES[category_name]
+            avg_score = sum(scores) / len(scores)
+            weighted_score = avg_score * category_info['weight']
+
+            category_insights[category_name] = {
+                'average_score': round(avg_score, 2),
+                'weighted_score': round(weighted_score, 2),
+                'weight': category_info['weight'],
+                'risk_level': category_info['risk_level'],
+                'response_count': len(scores),
+                'score_range': f"{min(scores):.1f} - {max(scores):.1f}",
+                'standard_deviation': round(np.std(scores), 2)
+            }
+
+    # Risk assessment
+    at_risk_count = tier_distribution['Crisis'] + tier_distribution['At Risk']
+    risk_percentage = (at_risk_count / len(hseg_scores)) * 100
+
+    # Key insights and recommendations
+    key_insights = []
+    recommendations = []
+
+    # Overall tier assessment
+    if overall_tier['tier'] == 'Crisis':
+        key_insights.append("🚨 Organization is in CRISIS state requiring immediate intervention")
+        recommendations.append("Conduct emergency leadership review and implement crisis response protocols")
+    elif overall_tier['tier'] == 'At Risk':
+        key_insights.append("⚠️ Organization shows warning signs requiring preventive action")
+        recommendations.append("Develop targeted improvement plan focusing on highest-risk categories")
+    elif overall_tier['tier'] == 'Mixed':
+        key_insights.append("📊 Mixed results indicate uneven experiences across organization")
+        recommendations.append("Focus on reducing disparities and strengthening weak areas")
+    elif overall_tier['tier'] == 'Safe':
+        key_insights.append("✅ Organization shows strong foundation with room for optimization")
+        recommendations.append("Implement continuous improvement programs and protect vulnerable groups")
+    else:  # Thriving
+        key_insights.append("🌟 Organization demonstrates excellence across all HSEG dimensions")
+        recommendations.append("Share best practices and maintain high standards through innovation")
+
+    # Category-specific insights
+    critical_categories = [cat for cat, info in category_insights.items()
+                          if HSEG_CATEGORIES[cat]['risk_level'] == 'Critical' and info['average_score'] < 2.5]
+
+    if critical_categories:
+        key_insights.append(f"🔴 Critical concerns in: {', '.join(critical_categories)}")
+        recommendations.append(f"Prioritize immediate action for {', '.join(critical_categories)}")
+
+    # Trend indicators (if we have timestamp data)
+    trend_analysis = "Trend analysis requires historical data collection"
+
+    return jsonify({
+        'overall_assessment': {
+            'score': round(overall_score, 1),
+            'tier': overall_tier['tier'],
+            'tier_color': overall_tier['color'],
+            'tier_description': overall_tier['description'],
+            'tier_icon': overall_tier['icon'],
+            'score_range': f"{min(hseg_scores):.1f} - {max(hseg_scores):.1f}",
+            'standard_deviation': round(np.std(hseg_scores), 2)
+        },
+        'tier_distribution': {
+            'percentages': {tier: round((count / len(hseg_scores)) * 100, 1)
+                          for tier, count in tier_distribution.items()},
+            'counts': tier_distribution,
+            'total_responses': len(hseg_scores)
+        },
+        'category_analysis': category_insights,
+        'risk_assessment': {
+            'at_risk_percentage': round(risk_percentage, 1),
+            'at_risk_count': at_risk_count,
+            'total_assessed': len(hseg_scores),
+            'risk_level': 'High' if risk_percentage > 30 else 'Moderate' if risk_percentage > 15 else 'Low'
+        },
+        'key_insights': key_insights,
+        'recommendations': recommendations,
+        'trend_analysis': trend_analysis,
+        'methodology': {
+            'framework': 'HSEG Five-Tier Cultural Risk Assessment',
+            'categories': len(HSEG_CATEGORIES),
+            'total_questions': 22,
+            'weighting_system': 'Risk-proportional category weights',
+            'score_range': '7-28 points (normalized)',
+            'documentation': 'HSEG_Comprehensive_Scoring_Documentation.md'
+        }
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, port=8999, host='0.0.0.0')

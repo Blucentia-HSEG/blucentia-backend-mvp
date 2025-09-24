@@ -396,7 +396,75 @@ class DashboardApp {
                         titleColor: 'white',
                         bodyColor: 'white',
                         borderColor: '#2563eb',
-                        borderWidth: 1
+                        borderWidth: 1,
+                        callbacks: {
+                            afterLabel: function(context) {
+                                const score = context.parsed.y;
+                                if (score >= 7 && score <= 12) return 'Tier: Crisis 🔴';
+                                if (score >= 13 && score <= 16) return 'Tier: At Risk 🟠';
+                                if (score >= 17 && score <= 20) return 'Tier: Mixed ⚫';
+                                if (score >= 21 && score <= 24) return 'Tier: Safe 🔵';
+                                if (score >= 25 && score <= 28) return 'Tier: Thriving 🟢';
+                                return '';
+                            }
+                        }
+                    },
+                    // Add horizontal lines for tier boundaries
+                    annotation: {
+                        annotations: {
+                            crisis: {
+                                type: 'line',
+                                yMin: 12,
+                                yMax: 12,
+                                borderColor: '#ef4444',
+                                borderWidth: 1,
+                                borderDash: [5, 5],
+                                label: {
+                                    display: true,
+                                    content: 'Crisis',
+                                    position: 'end'
+                                }
+                            },
+                            atRisk: {
+                                type: 'line',
+                                yMin: 16,
+                                yMax: 16,
+                                borderColor: '#f97316',
+                                borderWidth: 1,
+                                borderDash: [5, 5],
+                                label: {
+                                    display: true,
+                                    content: 'At Risk',
+                                    position: 'end'
+                                }
+                            },
+                            mixed: {
+                                type: 'line',
+                                yMin: 20,
+                                yMax: 20,
+                                borderColor: '#6b7280',
+                                borderWidth: 1,
+                                borderDash: [5, 5],
+                                label: {
+                                    display: true,
+                                    content: 'Mixed',
+                                    position: 'end'
+                                }
+                            },
+                            safe: {
+                                type: 'line',
+                                yMin: 24,
+                                yMax: 24,
+                                borderColor: '#3b82f6',
+                                borderWidth: 1,
+                                borderDash: [5, 5],
+                                label: {
+                                    display: true,
+                                    content: 'Safe',
+                                    position: 'end'
+                                }
+                            }
+                        }
                     }
                 },
                 scales: {
@@ -411,9 +479,20 @@ class DashboardApp {
                         grid: {
                             color: 'rgba(0, 0, 0, 0.1)'
                         },
-                        min: 1.5,
-                        max: 3.0,
-                        ticks: { stepSize: 0.25 }
+                        min: 7,
+                        max: 28,
+                        ticks: {
+                            stepSize: 3,
+                            callback: function(value, index, ticks) {
+                                // Add HSEG tier indicators
+                                if (value === 12) return value + ' (Crisis)';
+                                if (value === 16) return value + ' (At Risk)';
+                                if (value === 20) return value + ' (Mixed)';
+                                if (value === 24) return value + ' (Safe)';
+                                if (value === 28) return value + ' (Thriving)';
+                                return value;
+                            }
+                        }
                     }
                 },
                 elements: {
@@ -555,9 +634,10 @@ class DashboardApp {
                 this.charts.trendChart.data.labels = trendData.labels;
                 this.charts.trendChart.data.datasets = trendData.datasets || [];
                 if (metric === 'culture_score' && this.charts.trendChart.options && this.charts.trendChart.options.scales && this.charts.trendChart.options.scales.y) {
-                    this.charts.trendChart.options.scales.y.min = 1.5;
-                    this.charts.trendChart.options.scales.y.max = 3.0;
-                    this.charts.trendChart.options.scales.y.ticks = { stepSize: 0.25 };
+                    // Update for HSEG 28-point scale
+                    this.charts.trendChart.options.scales.y.min = 7;
+                    this.charts.trendChart.options.scales.y.max = 28;
+                    this.charts.trendChart.options.scales.y.ticks = { stepSize: 3 };
                 }
                 this.charts.trendChart.update('none');
             }
@@ -619,9 +699,6 @@ class DashboardApp {
                 break;
             case 'correlations':
                 await this.loadCorrelationsSection();
-                break;
-            case 'insights':
-                await this.loadInsightsSection();
                 break;
             case 'advanced':
                 await this.loadAdvancedSection();
@@ -686,19 +763,64 @@ class DashboardApp {
 
         const chartType = (document.getElementById('sectionChartType') || {}).value || 'radar';
         const comparison = (document.getElementById('sectionComparisonMode') || {}).value || 'single';
+        const scoringMode = (document.getElementById('sectionScoringMode') || {}).value || 'raw';
         const selectedOrg = (document.getElementById('sectionOrgFilter') || {}).value || 'all';
         const multiSel = document.getElementById('sectionOrgMulti');
 
         // Clear cache for organization sections when switching comparison modes or organizations
         this.clearCacheForPattern('/api/organizations/sections');
 
-        const labels = Object.keys(sectionsData).map(label => label.replace('_', ' ').toUpperCase());
-        const overallValues = Object.keys(sectionsData).map(k => sectionsData[k].overall_score || 0);
+        // Prepare labels with category weights for HSEG mode
+        const labels = Object.keys(sectionsData).map(label => {
+            const sectionData = sectionsData[label];
+            if (scoringMode === 'weighted' && sectionData.category_weight) {
+                return `${label.replace('_', ' ').toUpperCase()}\n(Weight: ${sectionData.category_weight}x)`;
+            } else if (scoringMode === 'percentage') {
+                return `${label.replace('_', ' ').toUpperCase()}\n(% of Max)`;
+            }
+            return label.replace('_', ' ').toUpperCase();
+        });
+
+        // Get values based on scoring mode
+        const overallValues = Object.keys(sectionsData).map(k => {
+            const sectionData = sectionsData[k];
+            if (scoringMode === 'weighted') {
+                return sectionData.weighted_score || 0;
+            } else if (scoringMode === 'percentage') {
+                return sectionData.weighted_percentage || 0;
+            } else {
+                return sectionData.overall_score || 0;
+            }
+        });
+
+        // Helper function to get organization values based on scoring mode
+        const getOrgValues = (orgSections) => {
+            return Object.keys(sectionsData).map(k => {
+                const orgData = orgSections[k];
+                if (!orgData) return 0;
+
+                if (scoringMode === 'weighted') {
+                    return orgData.weighted_score || orgData.score || 0;
+                } else if (scoringMode === 'percentage') {
+                    // Calculate percentage for this org's data
+                    const sectionInfo = sectionsData[k];
+                    if (sectionInfo && sectionInfo.category_weight) {
+                        const rawScore = orgData.score || orgData.overall_score || 0;
+                        const maxWeightedForCategory = 4 * sectionInfo.category_weight;
+                        const orgWeightedScore = rawScore * sectionInfo.category_weight;
+                        return (orgWeightedScore / maxWeightedForCategory) * 100;
+                    }
+                    return 0;
+                } else {
+                    return orgData.score || orgData.overall_score || 0;
+                }
+            });
+        };
 
         const datasets = [];
         if (comparison === 'single' && selectedOrg !== 'all') {
             const orgSec = await this.fetchWithCache(`/api/organizations/sections?organization=${encodeURIComponent(selectedOrg)}`);
-            const orgVals = Object.keys(sectionsData).map(k => (orgSec[k]?.score) || (orgSec[k]?.overall_score) || 0);
+            const orgVals = getOrgValues(orgSec);
             datasets.push({ label: selectedOrg, data: orgVals, backgroundColor: 'rgba(37,99,235,0.2)', borderColor: '#2563eb' });
         } else if (comparison === 'single' || (comparison !== 'multi' && selectedOrg === 'all')) {
             datasets.push({ label: 'Overall', data: overallValues, backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: '#2563eb' });
@@ -709,7 +831,7 @@ class DashboardApp {
         // If benchmark mode and a specific org selected, overlay org values
         if (comparison === 'benchmark' && selectedOrg && selectedOrg !== 'all') {
             const orgSec = await this.fetchWithCache(`/api/organizations/sections?organization=${encodeURIComponent(selectedOrg)}`);
-            const orgVals = Object.keys(sectionsData).map(k => (orgSec[k]?.score) || (orgSec[k]?.overall_score) || 0);
+            const orgVals = getOrgValues(orgSec);
             datasets.push({ label: selectedOrg, data: orgVals, backgroundColor: 'rgba(16,185,129,0.2)', borderColor: '#10b981' });
         }
 
@@ -720,30 +842,63 @@ class DashboardApp {
             for (let i=0;i<chosen.length;i++) {
                 const org = chosen[i];
                 const orgSec = await this.fetchWithCache(`/api/organizations/sections?organization=${encodeURIComponent(org)}`);
-                const orgVals = Object.keys(sectionsData).map(k => (orgSec[k]?.score) || (orgSec[k]?.overall_score) || 0);
+                const orgVals = getOrgValues(orgSec);
                 datasets.push({ label: org, data: orgVals, backgroundColor: palette[i]+'33', borderColor: palette[i] });
             }
         }
 
-        const commonOptions = { responsive: true, maintainAspectRatio: false, animation: false };
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: scoringMode === 'raw' ? 'Raw Question Averages (1-4 scale)' :
+                          scoringMode === 'weighted' ? 'HSEG Weighted Scores (Risk-Proportional)' :
+                          'Category Performance (% of Maximum)',
+                    font: { size: 14, weight: 'bold' }
+                }
+            }
+        };
+
+        // Determine scale based on scoring mode
+        let scaleOptions;
+        if (scoringMode === 'weighted') {
+            const maxValues = Object.values(sectionsData).map(s => s.weighted_score || 0);
+            const maxVal = Math.max(...maxValues);
+            scaleOptions = {
+                min: 0,
+                max: Math.ceil(maxVal * 1.1),
+                ticks: { stepSize: Math.ceil(maxVal / 8) }
+            };
+        } else if (scoringMode === 'percentage') {
+            scaleOptions = {
+                min: 0,
+                max: 100,
+                ticks: { stepSize: 10, callback: function(value) { return value + '%'; } }
+            };
+        } else {
+            scaleOptions = { min: 1, max: 4, ticks: { stepSize: 0.5 } };
+        }
 
         if (chartType === 'bar') {
             this.charts.sectionRadarChart = new Chart(ctx, {
                 type: 'bar',
                 data: { labels, datasets },
-                options: { ...commonOptions, scales: { y: { min: 1, max: 4, ticks: { stepSize: 0.5 } } } }
+                options: { ...commonOptions, scales: { y: scaleOptions } }
             });
         } else if (chartType === 'horizontal') {
             this.charts.sectionRadarChart = new Chart(ctx, {
                 type: 'bar',
                 data: { labels, datasets },
-                options: { ...commonOptions, indexAxis: 'y', scales: { x: { min: 1, max: 4, ticks: { stepSize: 0.5 } } } }
+                options: { ...commonOptions, indexAxis: 'y', scales: { x: scaleOptions } }
             });
         } else {
             this.charts.sectionRadarChart = new Chart(ctx, {
                 type: 'radar',
                 data: { labels, datasets },
-                options: { ...commonOptions, scales: { r: { min: 1, max: 4, ticks: { stepSize: 0.5 }, animate: false } }, plugins: { legend: { display: true } } }
+                options: { ...commonOptions, scales: { r: { ...scaleOptions, animate: false } }, plugins: { ...commonOptions.plugins, legend: { display: true } } }
             });
         }
     }
@@ -783,9 +938,10 @@ class DashboardApp {
                 if (sizeFilter === 'small' && !(org.employee_count < 100)) return false;
             }
             if (scoreRange && scoreRange !== 'all') {
-                if (scoreRange === 'high' && !(org.culture_score >= 3.0)) return false;
-                if (scoreRange === 'medium' && !(org.culture_score >= 2.0 && org.culture_score < 3.0)) return false;
-                if (scoreRange === 'low' && !(org.culture_score < 2.0)) return false;
+                // Use HSEG tier boundaries: Crisis (7-12), At Risk (13-16), Mixed (17-20), Safe (21-24), Thriving (25-28)
+                if (scoreRange === 'high' && !(org.culture_score >= 21)) return false; // Safe + Thriving
+                if (scoreRange === 'medium' && !(org.culture_score >= 17 && org.culture_score < 21)) return false; // Mixed
+                if (scoreRange === 'low' && !(org.culture_score < 17)) return false; // Crisis + At Risk
             }
             return true;
         });
@@ -833,9 +989,14 @@ class DashboardApp {
                     datasets: [{
                         label: 'Culture Score',
                         data: cultureScores,
-                        backgroundColor: cultureScores.map(score =>
-                            score < 2.0 ? '#22c55e' : score < 2.5 ? '#f59e0b' : '#ef4444'
-                        ),
+                        backgroundColor: cultureScores.map(score => {
+                            // HSEG tier-based color coding
+                            if (score >= 25) return '#22c55e'; // Thriving - Green
+                            if (score >= 21) return '#3b82f6'; // Safe - Blue
+                            if (score >= 17) return '#6b7280'; // Mixed - Gray
+                            if (score >= 13) return '#f59e0b'; // At Risk - Orange
+                            return '#ef4444'; // Crisis - Red
+                        }),
                         borderWidth: 1,
                         yAxisID: 'y'
                     }, {
@@ -1046,9 +1207,14 @@ class DashboardApp {
                     datasets: [{
                         label: 'Culture Score',
                         data: scores,
-                        backgroundColor: scores.map(score =>
-                            score < 2.0 ? '#22c55e' : score < 2.5 ? '#f59e0b' : '#ef4444'
-                        ),
+                        backgroundColor: scores.map(score => {
+                            // HSEG tier-based color coding
+                            if (score >= 25) return '#22c55e'; // Thriving - Green
+                            if (score >= 21) return '#3b82f6'; // Safe - Blue
+                            if (score >= 17) return '#6b7280'; // Mixed - Gray
+                            if (score >= 13) return '#f59e0b'; // At Risk - Orange
+                            return '#ef4444'; // Crisis - Red
+                        }),
                         borderWidth: 1
                     }]
                 },
@@ -1803,24 +1969,26 @@ class DashboardApp {
                 this.charts.pcaChart.destroy();
             }
 
-            // Group data by domain
-            const domainColors = {
-                'Healthcare': '#ff6b6b',
-                'University': '#4ecdc4',
-                'Business': '#45b7d1'
+            // Group data by HSEG tier for risk-based visualization
+            const tierColors = {
+                'Crisis': '#dc2626',      // Red
+                'At Risk': '#ea580c',     // Orange
+                'Mixed': '#6b7280',       // Gray
+                'Safe': '#16a34a',        // Green
+                'Thriving': '#059669'     // Emerald
             };
 
             const datasets = [];
-            const domains = [...new Set(clusteringData.pca_data.map(d => d.domain))];
+            const tiers = [...new Set(clusteringData.pca_data.map(d => d.hseg_tier))];
 
-            domains.forEach(domain => {
-                const domainData = clusteringData.pca_data.filter(d => d.domain === domain);
+            tiers.forEach(tier => {
+                const tierData = clusteringData.pca_data.filter(d => d.hseg_tier === tier);
                 datasets.push({
-                    label: domain,
-                    data: domainData.map(d => ({x: d.x, y: d.y})),
-                    backgroundColor: domainColors[domain] || '#999',
-                    pointRadius: 3,
-                    pointHoverRadius: 5
+                    label: `${tier} (${tierData.length})`,
+                    data: tierData.map(d => ({x: d.x, y: d.y})),
+                    backgroundColor: tierColors[tier] || '#999',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
             });
 
@@ -1835,12 +2003,26 @@ class DashboardApp {
                         y: { title: { display: true, text: 'PC2' }}
                     },
                     plugins: {
-                        title: { display: true, text: 'PCA - Cultural Dimensions' },
+                        title: { display: true, text: 'PCA Analysis - HSEG Cultural Risk Clustering' },
+                        subtitle: {
+                            display: true,
+                            text: `${clusteringData.hseg_context?.total_samples || 0} samples | Avg Score: ${clusteringData.hseg_context?.score_stats?.mean || 'N/A'}`
+                        },
                         tooltip: {
                             callbacks: {
+                                title: function(context) {
+                                    const point = clusteringData.pca_data[context[0].dataIndex];
+                                    return point.organization;
+                                },
                                 label: function(context) {
                                     const point = clusteringData.pca_data[context.dataIndex];
-                                    return `${point.organization} (${point.domain})`;
+                                    return [
+                                        `Domain: ${point.domain}`,
+                                        `HSEG Score: ${point.hseg_score}`,
+                                        `Tier: ${point.hseg_tier}`,
+                                        `PC1: ${point.x.toFixed(2)}`,
+                                        `PC2: ${point.y.toFixed(2)}`
+                                    ];
                                 }
                             }
                         }
@@ -1857,47 +2039,65 @@ class DashboardApp {
             const clusteringData = await this.fetchWithCache('/api/advanced/clustering');
             const ctx = document.getElementById('varianceChart');
 
-            if (!ctx || !clusteringData.explained_variance) return;
+            if (!ctx || !clusteringData.hseg_context) return;
 
             if (this.charts.varianceChart) {
                 this.charts.varianceChart.destroy();
             }
 
-            const explainedVar = clusteringData.explained_variance;
-            const cumulative = explainedVar.reduce((acc, val, i) => {
-                acc.push((acc[i-1] || 0) + val);
-                return acc;
-            }, []);
+            const tierCounts = clusteringData.hseg_context.tier_counts;
+            const scoreStats = clusteringData.hseg_context.score_stats;
+            const tierColors = {
+                'Crisis': '#dc2626',
+                'At Risk': '#ea580c',
+                'Mixed': '#6b7280',
+                'Safe': '#16a34a',
+                'Thriving': '#059669'
+            };
 
             this.charts.varianceChart = new Chart(ctx, {
-                type: 'bar',
+                type: 'doughnut',
                 data: {
-                    labels: explainedVar.map((_, i) => `PC${i+1}`),
+                    labels: Object.keys(tierCounts).filter(tier => tierCounts[tier] > 0),
                     datasets: [{
-                        label: 'Explained Variance',
-                        data: explainedVar,
-                        backgroundColor: '#2563eb',
-                        yAxisID: 'y'
-                    }, {
-                        label: 'Cumulative',
-                        data: cumulative,
-                        type: 'line',
-                        borderColor: '#dc2626',
-                        backgroundColor: 'transparent',
-                        yAxisID: 'y1'
+                        data: Object.keys(tierCounts).filter(tier => tierCounts[tier] > 0).map(tier => tierCounts[tier]),
+                        backgroundColor: Object.keys(tierCounts).filter(tier => tierCounts[tier] > 0).map(tier => tierColors[tier]),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: { type: 'linear', display: true, position: 'left' },
-                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }}
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'HSEG Tier Distribution',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                font: { size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const tier = context.label;
+                                    const count = context.parsed;
+                                    const total = clusteringData.hseg_context.total_samples;
+                                    const percentage = ((count / total) * 100).toFixed(1);
+                                    return `${tier}: ${count} (${percentage}%)`;
+                                }
+                            }
+                        }
                     }
                 }
             });
         } catch (error) {
-            console.error('Failed to setup variance chart:', error);
+            console.error('Failed to setup HSEG tier chart:', error);
         }
     }
 
@@ -2679,18 +2879,47 @@ class DashboardApp {
             if (!ctx || !data.labels) return;
             if (this.charts.analyticsTrendChart) this.charts.analyticsTrendChart.destroy();
 
-            // Adjust chart options based on metric type
+            // Adjust chart options based on metric type using HSEG framework
             let chartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: metric === 'culture_score' ? { min: 1.5, max: 3.0, ticks: { stepSize: 0.25 } } :
-                        metric === 'section_scores' ? { min: 1.0, max: 4.0, ticks: { stepSize: 0.5 } } : {}
+                    y: (metric === 'culture_score' || metric === 'section_scores') ? {
+                        min: 7,
+                        max: 28,
+                        ticks: {
+                            stepSize: 3,
+                            callback: function(value, index, ticks) {
+                                // Add HSEG tier indicators
+                                if (value === 12) return value + ' (Crisis)';
+                                if (value === 16) return value + ' (At Risk)';
+                                if (value === 20) return value + ' (Mixed)';
+                                if (value === 24) return value + ' (Safe)';
+                                if (value === 28) return value + ' (Thriving)';
+                                return value;
+                            }
+                        }
+                    } : {}
                 },
                 plugins: {
                     legend: {
                         display: metric === 'section_scores',
                         position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function(context) {
+                                if (metric === 'culture_score' || metric === 'section_scores') {
+                                    const score = context.parsed.y;
+                                    if (score >= 7 && score <= 12) return 'Tier: Crisis 🔴';
+                                    if (score >= 13 && score <= 16) return 'Tier: At Risk 🟠';
+                                    if (score >= 17 && score <= 20) return 'Tier: Mixed ⚫';
+                                    if (score >= 21 && score <= 24) return 'Tier: Safe 🔵';
+                                    if (score >= 25 && score <= 28) return 'Tier: Thriving 🟢';
+                                }
+                                return '';
+                            }
+                        }
                     }
                 }
             };
@@ -2729,7 +2958,7 @@ class DashboardApp {
             '#orgMinResponses', '#orgDomainFilter', '#scoreRange', '#orgSizeFilter',
             '#orgSortBy', '#performanceTimeRange', '#topOrgCount',
             '#distributionGroupBy', '#distributionMetric',
-            '#sectionOrgFilter', '#sectionOrgMulti', '#sectionChartType', '#sectionComparisonMode',
+            '#sectionOrgFilter', '#sectionOrgMulti', '#sectionChartType', '#sectionComparisonMode', '#sectionScoringMode',
             '#analyticsTrendTimeRange', '#analyticsTrendMetric', '#analyticsTrendGranularity', '#analyticsTrendSmoothing',
             '#distributionType', '#distributionBins',
             '#pcaComponents', '#pcaFeatures', '#pcaScaling',
@@ -2918,13 +3147,13 @@ class DashboardApp {
                 const labels = Object.keys(sections).map(label => label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
                 const values = Object.keys(sections).map(k => sections[k]?.overall_score || 0);
 
-                // Color-code based on HSEG risk zones
+                // Color-code based on HSEG tier boundaries (7-28 scale)
                 const colors = values.map(score => {
-                    if (score <= 1.5) return '#dc2626'; // Crisis Zone - Red
-                    if (score <= 2.0) return '#ea580c'; // At Risk Zone - Orange
-                    if (score <= 2.5) return '#ca8a04'; // Mixed Zone - Yellow
-                    if (score <= 3.0) return '#16a34a'; // Safe Zone - Green
-                    return '#059669'; // Thriving Zone - Emerald
+                    if (score <= 12) return '#dc2626'; // Crisis (7-12) - Red
+                    if (score <= 16) return '#ea580c'; // At Risk (13-16) - Orange
+                    if (score <= 20) return '#ca8a04'; // Mixed (17-20) - Yellow
+                    if (score <= 24) return '#16a34a'; // Safe (21-24) - Green
+                    return '#059669'; // Thriving (25-28) - Emerald
                 });
 
                 this.charts.distributionChart = new Chart(ctx, {
@@ -2944,13 +3173,13 @@ class DashboardApp {
                         maintainAspectRatio: false,
                         scales: {
                             y: {
-                                min: 1,
-                                max: 4,
-                                ticks: { stepSize: 0.5 },
-                                title: { display: true, text: 'Cultural Health Score (1=Crisis, 4=Thriving)' }
+                                min: 7,
+                                max: 28,
+                                ticks: { stepSize: 3 },
+                                title: { display: true, text: 'HSEG Score (7=Crisis, 28=Thriving)' }
                             },
                             x: {
-                                title: { display: true, text: 'Cultural Assessment Dimensions' }
+                                title: { display: true, text: 'HSEG Cultural Assessment Categories' }
                             }
                         },
                         plugins: {
@@ -2958,11 +3187,11 @@ class DashboardApp {
                                 callbacks: {
                                     afterLabel: function(context) {
                                         const score = context.parsed.y;
-                                        if (score <= 1.5) return 'Zone: Crisis - Immediate intervention required';
-                                        if (score <= 2.0) return 'Zone: At Risk - Early warning signs present';
-                                        if (score <= 2.5) return 'Zone: Mixed - Inconsistent cultural experiences';
-                                        if (score <= 3.0) return 'Zone: Safe - Generally healthy environment';
-                                        return 'Zone: Thriving - Exemplary cultural practices';
+                                        if (score <= 12) return 'Tier: Crisis - Immediate intervention required';
+                                        if (score <= 16) return 'Tier: At Risk - Early warning signs present';
+                                        if (score <= 20) return 'Tier: Mixed - Inconsistent cultural experiences';
+                                        if (score <= 24) return 'Tier: Safe - Generally healthy environment';
+                                        return 'Tier: Thriving - Exemplary cultural practices';
                                     }
                                 }
                             }
@@ -3028,6 +3257,22 @@ class DashboardApp {
         this.loadTabData(tabPane);
     }
 
+    getFilterValue(filterType) {
+        // Get filter values for insights generation
+        switch (filterType) {
+            case 'domain':
+                // Try to get domain filter from org section, default to 'all'
+                const domainElement = document.getElementById('orgDomainFilter');
+                return domainElement ? domainElement.value : 'all';
+            case 'organization':
+                // Try to get selected organization, default to 'all'
+                const orgElement = document.getElementById('selectedOrganization');
+                return orgElement ? orgElement.value : 'all';
+            default:
+                return 'all';
+        }
+    }
+
     async generateStatisticalInsights() {
         // Generate HSEG-framework insights for investors and stakeholders
         const insightsContainer = document.getElementById('statisticalInsights');
@@ -3036,106 +3281,30 @@ class DashboardApp {
         insightsContainer.innerHTML = `
             <div class="tab-loading">
                 <div class="spinner-border" role="status"></div>
-                <p>Analyzing cultural risk assessment data...</p>
+                <p>Analyzing HSEG cultural risk assessment framework...</p>
             </div>
         `;
 
         try {
-            const stats = await this.fetchWithCache('/api/stats/quick');
-            const sections = await this.fetchWithCache('/api/sections');
-            const organizations = await this.fetchWithCache('/api/organizations?limit=1000');
+            // Get current filter values
+            const domainFilter = this.getFilterValue('domain');
+            const orgFilter = this.getFilterValue('organization');
 
-            const insights = this.calculateHSEGInsights(stats, sections, organizations);
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (domainFilter && domainFilter !== 'all') params.append('domain', domainFilter);
+            if (orgFilter && orgFilter !== 'all') params.append('organization', orgFilter);
 
-            insightsContainer.innerHTML = `
-                <div class="insights-header mb-4">
-                    <h4><i class="fas fa-chart-line me-2"></i>HSEG Cultural Risk Assessment - Executive Summary</h4>
-                    <p class="text-muted">Data-driven insights for stakeholder decision-making based on the five-tier HSEG assessment framework</p>
-                </div>
+            // Fetch comprehensive HSEG insights
+            const hsegInsights = await this.fetchWithCache(`/api/insights/hseg?${params.toString()}`);
 
-                <!-- Executive Risk Dashboard -->
-                <div class="row g-3 mb-4">
-                    <div class="col-md-12">
-                        <div class="executive-risk-card">
-                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Cultural Risk Portfolio Overview</h5>
-                            <div class="row g-3">
-                                ${insights.riskZones.map(zone => `
-                                    <div class="col-md-2">
-                                        <div class="risk-zone-card ${zone.cssClass}">
-                                            <div class="zone-header">${zone.icon} ${zone.name}</div>
-                                            <div class="zone-count">${zone.count}</div>
-                                            <div class="zone-percentage">${zone.percentage}%</div>
-                                            <div class="zone-description">${zone.description}</div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            if (hsegInsights.error) {
+                throw new Error(hsegInsights.error);
+            }
 
-                <!-- Key Investment Insights -->
-                <div class="row g-3 mb-4">
-                    ${insights.keyInsights.map(insight => `
-                        <div class="col-md-6">
-                            <div class="insight-card ${insight.priority}">
-                                <div class="insight-header">
-                                    <i class="${insight.icon} insight-icon"></i>
-                                    <h6>${insight.title}</h6>
-                                    <span class="priority-badge ${insight.priority}">${insight.priorityLabel}</span>
-                                </div>
-                                <div class="insight-body">
-                                    <p>${insight.description}</p>
-                                    <div class="insight-metrics">
-                                        <div class="metric-primary">
-                                            <span class="metric-value">${insight.value}</span>
-                                            <span class="metric-label">${insight.label}</span>
-                                        </div>
-                                        ${insight.secondaryMetric ? `
-                                            <div class="metric-secondary">
-                                                <small>${insight.secondaryMetric}</small>
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                    <div class="insight-impact">
-                                        <strong>Business Impact:</strong> ${insight.businessImpact}
-                                    </div>
-                                    <div class="insight-action">
-                                        <strong>Recommended Action:</strong> ${insight.recommendedAction}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
+            // Render HSEG insights
+            this.renderHSEGInsights(hsegInsights, insightsContainer);
 
-                <!-- Domain-Specific Analysis -->
-                <div class="row g-3">
-                    <div class="col-md-12">
-                        <div class="domain-analysis-card">
-                            <h5><i class="fas fa-building me-2"></i>Multi-Domain Risk Analysis</h5>
-                            <div class="domain-grid">
-                                ${insights.domainAnalysis.map(domain => `
-                                    <div class="domain-item ${domain.riskLevel}">
-                                        <div class="domain-header">
-                                            <h6>${domain.name}</h6>
-                                            <span class="risk-badge ${domain.riskLevel}">${domain.riskLabel}</span>
-                                        </div>
-                                        <div class="domain-metrics">
-                                            <div class="metric">Organizations: ${domain.orgCount}</div>
-                                            <div class="metric">Avg Score: ${domain.avgScore}</div>
-                                            <div class="metric">Risk Index: ${domain.riskIndex}</div>
-                                        </div>
-                                        <div class="domain-recommendation">
-                                            <strong>Priority:</strong> ${domain.recommendation}
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
         } catch (error) {
             console.error('Failed to generate HSEG insights:', error);
             insightsContainer.innerHTML = `
@@ -3146,6 +3315,211 @@ class DashboardApp {
                 </div>
             `;
         }
+    }
+
+    renderHSEGInsights(hsegInsights, container) {
+        const { overall_assessment, tier_distribution, category_analysis, risk_assessment, key_insights, recommendations, methodology } = hsegInsights;
+
+        container.innerHTML = `
+            <div class="insights-header mb-4">
+                <h4><i class="fas fa-shield-alt me-2"></i>HSEG Cultural Risk Assessment - Executive Summary</h4>
+                <p class="text-muted">Comprehensive risk intelligence based on the five-tier HSEG framework with 28-point weighted scoring</p>
+            </div>
+
+            <!-- Overall Assessment Card -->
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm hseg-overview-card">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-3 text-center">
+                                    <div class="hseg-tier-display ${overall_assessment.tier.toLowerCase()}-tier">
+                                        <div class="tier-icon">${overall_assessment.tier_icon}</div>
+                                        <div class="tier-score">${overall_assessment.score}</div>
+                                        <div class="tier-name">${overall_assessment.tier}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <h5 class="mb-2">Overall Organizational Health: ${overall_assessment.tier}</h5>
+                                    <p class="text-muted mb-3">${overall_assessment.tier_description}</p>
+                                    <div class="row g-2">
+                                        <div class="col-sm-4">
+                                            <small class="text-muted">Score Range</small>
+                                            <div class="fw-bold">${overall_assessment.score_range}</div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <small class="text-muted">Standard Deviation</small>
+                                            <div class="fw-bold">±${overall_assessment.standard_deviation}</div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <small class="text-muted">Assessment Scale</small>
+                                            <div class="fw-bold">7-28 Points</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Assessment Dashboard -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Tier Distribution Analysis</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="tier-distribution-grid">
+                                ${Object.entries(tier_distribution.percentages).map(([tier, percentage]) => `
+                                    <div class="tier-item ${tier.toLowerCase()}-tier">
+                                        <div class="tier-percentage">${percentage}%</div>
+                                        <div class="tier-label">${tier}</div>
+                                        <div class="tier-count">${tier_distribution.counts[tier]} responses</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Risk Profile</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="risk-gauge ${risk_assessment.risk_level.toLowerCase()}-risk">
+                                <div class="risk-percentage">${risk_assessment.at_risk_percentage}%</div>
+                                <div class="risk-label">${risk_assessment.risk_level} Risk</div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="small text-muted">At-Risk Population</div>
+                                <div class="fw-bold">${risk_assessment.at_risk_count} / ${risk_assessment.total_assessed} responses</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Analysis -->
+            <div class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h6 class="mb-0"><i class="fas fa-layer-group me-2"></i>HSEG Category Performance Analysis</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="category-analysis-grid">
+                                ${Object.entries(category_analysis).map(([category, data]) => `
+                                    <div class="category-item ${data.risk_level.toLowerCase()}-risk">
+                                        <div class="category-header">
+                                            <h6 class="category-name">${category}</h6>
+                                            <span class="risk-badge ${data.risk_level.toLowerCase()}">${data.risk_level}</span>
+                                        </div>
+                                        <div class="category-metrics">
+                                            <div class="metric">
+                                                <span class="metric-value">${data.average_score}</span>
+                                                <span class="metric-label">Avg Score</span>
+                                            </div>
+                                            <div class="metric">
+                                                <span class="metric-value">${data.weighted_score}</span>
+                                                <span class="metric-label">Weighted</span>
+                                            </div>
+                                            <div class="metric">
+                                                <span class="metric-value">${data.weight}x</span>
+                                                <span class="metric-label">Weight</span>
+                                            </div>
+                                        </div>
+                                        <div class="category-stats">
+                                            <small class="text-muted">Range: ${data.score_range} | σ: ${data.standard_deviation}</small>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Insights and Recommendations -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Key Strategic Insights</h6>
+                        </div>
+                        <div class="card-body">
+                            ${key_insights.map(insight => `
+                                <div class="insight-item mb-3">
+                                    <div class="insight-text">${insight}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h6 class="mb-0"><i class="fas fa-tasks me-2"></i>Strategic Recommendations</h6>
+                        </div>
+                        <div class="card-body">
+                            ${recommendations.map(rec => `
+                                <div class="recommendation-item mb-3">
+                                    <i class="fas fa-arrow-right me-2 text-primary"></i>
+                                    <span>${rec}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Methodology Information -->
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm methodology-card">
+                        <div class="card-header bg-transparent">
+                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Assessment Methodology</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="methodology-metric">
+                                        <div class="metric-value">${methodology.framework}</div>
+                                        <div class="metric-label">Framework</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="methodology-metric">
+                                        <div class="metric-value">${methodology.categories}</div>
+                                        <div class="metric-label">Categories</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="methodology-metric">
+                                        <div class="metric-value">${methodology.total_questions}</div>
+                                        <div class="metric-label">Questions</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="methodology-metric">
+                                        <div class="metric-value">${methodology.score_range}</div>
+                                        <div class="metric-label">Score Range</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="methodology-metric">
+                                        <div class="metric-value">Risk-Based</div>
+                                        <div class="metric-label">Weighting</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     calculateHSEGInsights(stats, sections, organizations) {
@@ -3173,8 +3547,8 @@ class DashboardApp {
         // Generate key insights for investors
         const keyInsights = [];
 
-        // Crisis zone analysis
-        const crisisOrgs = organizations.filter(org => org.culture_score < 1.5);
+        // Crisis zone analysis (HSEG scores 7-12)
+        const crisisOrgs = organizations.filter(org => org.culture_score <= 12);
         if (crisisOrgs.length > 0) {
             keyInsights.push({
                 title: 'Critical Risk Exposure',
@@ -3190,8 +3564,8 @@ class DashboardApp {
             });
         }
 
-        // High-performing organizations
-        const thrivingOrgs = organizations.filter(org => org.culture_score >= 3.0);
+        // High-performing organizations (HSEG scores 25-28)
+        const thrivingOrgs = organizations.filter(org => org.culture_score >= 25);
         keyInsights.push({
             title: 'Cultural Excellence Leaders',
             priority: 'opportunity',
@@ -3205,9 +3579,9 @@ class DashboardApp {
             recommendedAction: 'Extract best practices, expand successful models, use as cultural mentors'
         });
 
-        // Section-based risk analysis
+        // Section-based risk analysis (HSEG scores below 17 = Crisis + At Risk)
         const criticalSections = Object.entries(sections)
-            .filter(([_, data]) => data.overall_score < 2.0)
+            .filter(([_, data]) => data.overall_score < 17)
             .sort((a, b) => a[1].overall_score - b[1].overall_score);
 
         if (criticalSections.length > 0) {
@@ -3365,7 +3739,7 @@ class DashboardApp {
         insights.push({
             icon: 'fas fa-chart-line',
             title: 'Overall Performance',
-            description: `The average culture score across all sections is ${avgScore.toFixed(2)}, indicating ${avgScore > 2.5 ? 'above-average' : 'below-average'} workplace culture.`,
+            description: `The average HSEG score across all categories is ${avgScore.toFixed(2)}, indicating ${avgScore >= 20 ? 'healthy (Mixed to Thriving)' : avgScore >= 17 ? 'mixed' : 'concerning (Crisis to At Risk)'} organizational culture.`,
             value: avgScore.toFixed(2),
             label: 'Average Score'
         });
