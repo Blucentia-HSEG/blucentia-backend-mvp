@@ -8,7 +8,10 @@
       "Bash(dir images)",
       "Bash(python:*)",
       "Bash(taskkill:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(mv:*)",
+      "Read(//c/Users/Moiz Syed/Desktop/Blucentia/ai-modeling/**)",
+      "Read(//c/Users/Moiz Syed/Desktop/Blucentia/blucentia-mvp-main/**)"
     ],
     "deny": [],
     "ask": []

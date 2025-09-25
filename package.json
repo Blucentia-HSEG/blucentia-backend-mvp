@@ -6,8 +6,12 @@
   "scripts": {
     "start": "python app.py",
     "dev": "python app.py",
-    "process-data": "python data_processor.py",
-    "setup": "pip install -r requirements.txt"
+    "build": "python utils/merge_json.py && echo Build complete - dataset ready for production",
+    "prebuild": "pip install -r requirements.txt",
+    "merge-data": "python utils/merge_json.py",
+    "split-data": "python utils/split_json.py",
+    "setup": "pip install -r requirements.txt",
+    "clean": "python -c \"import os; os.remove('hseg_final_dataset.json') if os.path.exists('hseg_final_dataset.json') else None; print('Cleaned merged dataset')\""
   },
   "keywords": [
     "hseg",

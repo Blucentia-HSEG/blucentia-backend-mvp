@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, send_from_directory, Response, stream
 from flask_cors import CORS
 import json
 import os
-from data_visualization import main as generate_visualizations
+from utils.data_visualization import main as generate_visualizations
 import numpy as np
 import math
 from functools import wraps
@@ -22,6 +22,80 @@ class NpEncoder(json.JSONEncoder):
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 CORS(app)
+
+# Content Security Policy configuration
+@app.after_request
+def add_security_headers(response):
+    # CSP configuration for dashboard with visualization libraries
+    # Note: Some charting libraries may require 'unsafe-eval' for dynamic features
+    # This is a balanced approach prioritizing functionality while maintaining security
+
+    # Get environment to determine CSP strictness
+    is_development = os.environ.get('FLASK_ENV') == 'development'
+
+    if is_development:
+        # More permissive CSP for development (includes unsafe-eval if needed)
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+            "https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com "
+            "https://cdn.plot.ly "
+            "https://unpkg.com "
+            "https://ajax.googleapis.com; "
+            "style-src 'self' 'unsafe-inline' "
+            "https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com "
+            "https://fonts.googleapis.com; "
+            "font-src 'self' "
+            "https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com "
+            "https://fonts.gstatic.com; "
+            "img-src 'self' data: blob:; "
+            "connect-src 'self' "
+            "https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com; "
+            "worker-src 'self' blob:; "
+            "child-src 'self' blob:; "
+            "object-src 'none'; "
+            "base-uri 'self';"
+        )
+    else:
+        # Production CSP - more restrictive but may need unsafe-eval for charting libraries
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+            "https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com "
+            "https://cdn.plot.ly "
+            "https://unpkg.com "
+            "https://ajax.googleapis.com; "
+            "style-src 'self' 'unsafe-inline' "
+            "https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com "
+            "https://fonts.googleapis.com; "
+            "font-src 'self' "
+            "https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com "
+            "https://fonts.gstatic.com; "
+            "img-src 'self' data: blob:; "
+            "connect-src 'self' "
+            "https://cdn.jsdelivr.net "
+            "https://cdnjs.cloudflare.com; "
+            "worker-src 'self' blob:; "
+            "child-src 'self' blob:; "
+            "object-src 'none'; "
+            "base-uri 'self';"
+        )
+    response.headers['Content-Security-Policy'] = csp
+
+    # Additional security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+
+    return response
 
 # Global data store
 processed_data = None
@@ -168,16 +242,64 @@ def calculate_category_scores(record):
 
     return category_scores
 
+def merge_data_chunks_if_needed():
+    """Merge data chunks if the full dataset file doesn't exist"""
+    if not os.path.exists('hseg_final_dataset.json') and os.path.exists('data/metadata.json'):
+        print("Full dataset not found. Merging data chunks...")
+        try:
+            import subprocess
+            result = subprocess.run(['python', 'utils/merge_json.py'],
+                                  capture_output=True, text=True, timeout=300)
+            if result.returncode == 0:
+                print("Successfully merged data chunks!")
+            else:
+                print(f"Error merging chunks: {result.stderr}")
+                return False
+        except Exception as e:
+            print(f"Failed to merge data chunks: {e}")
+            return False
+    return True
+
 def load_data():
     """Load processed data and raw data"""
     global processed_data, raw_data
 
-    # Load raw data for streaming
-    if os.path.exists('hseg_final_dataset.json'):
-        print("Loading raw dataset...")
+    # Load raw data - prioritize chunked data for GitHub compatibility
+    raw_data = []
+
+    if os.path.exists('data/metadata.json'):
+        print("Loading data from chunks (GitHub-compatible mode)...")
+        try:
+            with open('data/metadata.json', 'r') as f:
+                metadata = json.load(f)
+
+            for chunk_file in metadata['chunk_files']:
+                chunk_path = os.path.join('data', chunk_file)
+                if os.path.exists(chunk_path):
+                    print(f"Loading {chunk_file}...")
+                    with open(chunk_path, 'r') as f:
+                        chunk_data = json.load(f)
+                        if isinstance(chunk_data, list):
+                            raw_data.extend(chunk_data)
+                        else:
+                            raw_data.append(chunk_data)
+            print(f"Successfully loaded {len(raw_data)} records from {len(metadata['chunk_files'])} chunks")
+        except Exception as e:
+            print(f"Error loading data from chunks: {e}")
+            # Fallback to merged file if chunks fail
+            if os.path.exists('hseg_final_dataset.json'):
+                print("Falling back to merged dataset...")
+                with open('hseg_final_dataset.json', 'r') as f:
+                    raw_data = json.load(f)
+                print(f"Loaded {len(raw_data)} raw records from merged file")
+    elif os.path.exists('hseg_final_dataset.json'):
+        print("Loading raw dataset from merged file...")
         with open('hseg_final_dataset.json', 'r') as f:
             raw_data = json.load(f)
         print(f"Loaded {len(raw_data)} raw records")
+    else:
+        print("Warning: No data files found. Please run 'python utils/merge_json.py' first.")
+        raw_data = []
 
     # Try to load from processed JSON first
     if os.path.exists('processed_hseg_data.json'):
@@ -517,13 +639,13 @@ def get_organizations():
                 elif size_filter == 'small' and employee_count >= 100:
                     continue
 
-            # Apply score range filter
+            # Apply HSEG score range filter (7-28 scale)
             if score_range != 'all':
-                if score_range == 'high' and avg_score < 3.0:
+                if score_range == 'high' and avg_score < 21.0:  # Safe + Thriving (21-28)
                     continue
-                elif score_range == 'medium' and not (2.0 <= avg_score < 3.0):
+                elif score_range == 'medium' and not (17.0 <= avg_score < 21.0):  # Mixed (17-20)
                     continue
-                elif score_range == 'low' and avg_score >= 2.0:
+                elif score_range == 'low' and avg_score >= 17.0:  # Crisis + At Risk (7-16)
                     continue
 
             result.append({
@@ -548,22 +670,23 @@ def get_demographics():
     if not raw_data:
         return jsonify({})
 
-    # Define demographic mappings based on hseg_comprehensive_analysis.py
+    # Define demographic mappings using actual column names
     demographic_mappings = {
-        'age_range': 'q26',
-        'gender_identity': 'q27',
-        'race_ethnicity': 'q28',
-        'education_level': 'q29',
-        'tenure': 'q30',
-        'position_level': 'q31',
-        'domain_role': 'q32',
-        'supervises_others': 'q33'
+        'age_range': 'age_range',
+        'gender_identity': 'gender_identity',
+        'tenure_range': 'tenure_range',
+        'tenure': 'tenure_range',  # alias for tenure_range
+        'position_level': 'position_level',
+        'domain_role': 'q32_domain_role',
+        'supervises_others': 'supervises_others',
+        'race_ethnicity': 'q28_race_ethnicity',
+        'education_level': 'q29_education_level'
     }
 
-    # Also check for direct demographic columns
-    for demo_name in ['age_range', 'gender_identity', 'tenure_range', 'position_level']:
-        if demo_name in raw_data[0] if raw_data else {}:
-            demographic_mappings[demo_name] = demo_name
+    # Ensure columns exist in data
+    if raw_data and len(raw_data) > 0:
+        available_columns = set(raw_data[0].keys())
+        demographic_mappings = {k: v for k, v in demographic_mappings.items() if v in available_columns}
 
     result = {}
 
@@ -625,6 +748,145 @@ def get_metadata():
     if processed_data and 'metadata' in processed_data:
         return jsonify(processed_data['metadata'])
     return jsonify({})
+
+@app.route('/api/advanced/treemap', methods=['GET'])
+@cache_with_request_params(maxsize=128)
+def get_treemap_data():
+    """Get hierarchical treemap data for domain > organization > department"""
+    if not raw_data:
+        return jsonify([])
+
+    min_count = int(request.args.get('min_count', 3))
+    domain_filter = request.args.get('domain', 'all')
+
+    # Group by domain, organization, department
+    grouped_data = {}
+    for record in raw_data:
+        domain = record.get('domain', 'Unknown')
+        org = record.get('organization_name', 'Unknown')
+        dept = record.get('department', 'Unknown')
+
+        if domain_filter != 'all' and domain != domain_filter:
+            continue
+
+        key = (domain, org, dept)
+        if key not in grouped_data:
+            grouped_data[key] = {
+                'responses': [],
+                'count': 0
+            }
+
+        hseg_score = calculate_hseg_score(record)
+        if hseg_score > 0:
+            grouped_data[key]['responses'].append(hseg_score)
+            grouped_data[key]['count'] += 1
+
+    # Build treemap structure
+    treemap_data = []
+    for (domain, org, dept), data in grouped_data.items():
+        if data['count'] >= min_count:
+            avg_score = sum(data['responses']) / len(data['responses']) if data['responses'] else 0
+            treemap_data.append({
+                'domain': domain,
+                'organization': org,
+                'department': dept,
+                'count': data['count'],
+                'avg_score': round(avg_score, 2),
+                'path': f"{domain}/{org}/{dept}"
+            })
+
+    # Sort by count for better visualization
+    treemap_data.sort(key=lambda x: x['count'], reverse=True)
+
+    return jsonify(treemap_data)
+
+@app.route('/api/advanced/violin', methods=['GET'])
+@cache_with_request_params(maxsize=128)
+def get_violin_data():
+    """Get violin plot data for section score distributions by domain"""
+    if not raw_data:
+        return jsonify({})
+
+    domain_filter = request.args.get('domain', 'all')
+    section_filter = request.args.get('section', 'all')
+
+    # HSEG sections with their question ranges
+    sections = {
+        'Power Abuse Suppression': list(range(1, 5)),
+        'Discrimination Exclusion': list(range(5, 8)),
+        'Manipulative Work Culture': list(range(8, 11)),
+        'Failure of Accountability': list(range(11, 15)),
+        'Mental Health Harm': list(range(15, 19)),
+        'Erosion of Voice Autonomy': list(range(19, 23))
+    }
+
+    violin_data = {}
+
+    for record in raw_data:
+        domain = record.get('domain', 'Unknown')
+        if domain_filter != 'all' and domain != domain_filter:
+            continue
+
+        if domain not in violin_data:
+            violin_data[domain] = {}
+
+        for section_name, questions in sections.items():
+            if section_filter != 'all' and section_name != section_filter:
+                continue
+
+            if section_name not in violin_data[domain]:
+                violin_data[domain][section_name] = []
+
+            # Calculate section score
+            section_scores = [record.get(f'q{q}') for q in questions if record.get(f'q{q}') is not None]
+            if section_scores:
+                section_avg = sum(section_scores) / len(section_scores)
+                violin_data[domain][section_name].append(section_avg)
+
+    # Convert to format suitable for frontend
+    result = {}
+    for domain, sections_data in violin_data.items():
+        result[domain] = {}
+        for section, scores in sections_data.items():
+            if scores:
+                # Calculate distribution statistics
+                scores_array = np.array(scores)
+                result[domain][section] = {
+                    'scores': scores,
+                    'mean': float(np.mean(scores_array)),
+                    'median': float(np.median(scores_array)),
+                    'std': float(np.std(scores_array)),
+                    'min': float(np.min(scores_array)),
+                    'max': float(np.max(scores_array)),
+                    'q25': float(np.percentile(scores_array, 25)),
+                    'q75': float(np.percentile(scores_array, 75)),
+                    'count': len(scores)
+                }
+
+    return jsonify(result)
+
+@app.route('/api/debug/columns', methods=['GET'])
+def debug_columns():
+    """Debug: Get all available columns in raw data"""
+    if not raw_data:
+        return jsonify({"error": "No raw data available"})
+
+    if len(raw_data) > 0:
+        sample_record = raw_data[0]
+        columns = list(sample_record.keys())
+
+        # Find demographic-related columns
+        demographic_columns = [col for col in columns if any(keyword in col.lower() for keyword in
+                              ['age', 'gender', 'race', 'ethnic', 'tenure', 'position', 'level', 'supervisor', 'q2', 'q3', 'demo'])]
+
+        return jsonify({
+            "all_columns": columns,
+            "demographic_columns": demographic_columns,
+            "total_records": len(raw_data),
+            "sample_record": sample_record
+        })
+
+    return jsonify({"error": "No data records found"})
 
 @app.route('/api/data/paginated', methods=['GET'])
 @cache_with_request_params(maxsize=128)
@@ -1078,11 +1340,12 @@ def get_tenure_matrix():
     for record in raw_data:
         dom = record.get('domain') or 'Unknown'
         ten = record.get('tenure_range') or record.get('q30') or 'Unknown'
-        scores = [record.get(f'q{i}') for i in range(1,23) if record.get(f'q{i}') is not None]
-        if not scores:
+        # Use HSEG score calculation instead of raw average
+        hseg_score = calculate_hseg_score(record)
+        if hseg_score <= 0:
             continue
         key = (dom, ten)
-        by_key[key].append(sum(scores)/len(scores))
+        by_key[key].append(hseg_score)
 
     domains = sorted(list({k[0] for k in by_key.keys()}))
     tenures = [t for t in tenure_order if any(k[1]==t for k in by_key.keys())]
@@ -1432,8 +1695,23 @@ def get_organization_sections():
                 section_scores.append(section_score)
 
         if section_scores:
+            # Calculate raw average score (1-4 scale)
+            raw_avg = sum(section_scores) / len(section_scores)
+
+            # Calculate weighted HSEG contribution for this category
+            category_info = HSEG_CATEGORIES[section_name]
+            weighted_contribution = raw_avg * category_info['weight']
+
+            # Calculate what this represents as a percentage of max possible weighted score
+            max_weighted_for_category = 4 * category_info['weight']
+            weighted_percentage = (weighted_contribution / max_weighted_for_category) * 100
+
             section_results[section_name.replace(' & ', ' ')] = {
-                'score': round(sum(section_scores) / len(section_scores), 3),
+                'score': round(raw_avg, 3),  # Keep for compatibility
+                'weighted_score': round(weighted_contribution, 3),  # HSEG weighted contribution
+                'weighted_percentage': round(weighted_percentage, 1),  # Percentage of category max
+                'category_weight': category_info['weight'],  # Category weight
+                'risk_level': category_info['risk_level'],  # Risk classification
                 'std': round(np.std(section_scores), 3),
                 'count': len(section_scores)
             }

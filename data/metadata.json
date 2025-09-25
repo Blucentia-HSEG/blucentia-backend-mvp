@@ -1,0 +1,13 @@
+{
+  "original_file": "hseg_final_dataset.json",
+  "original_size_mb": 83.14728260040283,
+  "total_chunks": 5,
+  "data_type": "list",
+  "chunk_files": [
+    "hseg_data_part_01.json",
+    "hseg_data_part_02.json",
+    "hseg_data_part_03.json",
+    "hseg_data_part_04.json",
+    "hseg_data_part_05.json"
+  ]
+}

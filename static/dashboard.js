@@ -99,11 +99,13 @@ class DashboardApp {
     }
 
     setupEventListeners() {
-        // Sidebar navigation
-        document.querySelectorAll('.nav-link').forEach(link => {
+        // Sidebar navigation (only bind to sidebar links that have data-section)
+        const sidebarSectionLinks = document.querySelectorAll('.sidebar .nav-link[data-section]');
+        sidebarSectionLinks.forEach(link => {
             link.addEventListener('click', (e) => {
-                e.preventDefault();
                 const section = link.dataset.section;
+                if (!section) return; // ignore non-section links (e.g., tab buttons)
+                e.preventDefault();
                 this.navigateToSection(section);
             });
         });
@@ -204,21 +206,158 @@ class DashboardApp {
 
     setupChartDefaults() {
         try {
-            // Disable all animations globally
+            // COMPREHENSIVE ANIMATION DISABLING - NO ANIMATIONS ANYWHERE
             Chart.defaults.animation = false;
-            Chart.defaults.animations = {};
+            Chart.defaults.animations = false;
             Chart.defaults.animation = { duration: 0 };
-            Chart.defaults.transitions = Chart.defaults.transitions || {};
-            Chart.defaults.transitions.active = { animation: { duration: 0 } };
-            Chart.defaults.transitions.show = { animation: { duration: 0 } };
-            Chart.defaults.transitions.hide = { animation: { duration: 0 } };
             Chart.defaults.responsiveAnimationDuration = 0;
+
+            // Disable all transition animations
+            Chart.defaults.transitions = {
+                active: { animation: { duration: 0 } },
+                show: { animation: { duration: 0 } },
+                hide: { animation: { duration: 0 } },
+                resize: { animation: { duration: 0 } }
+            };
+
+            // Disable hover animations completely
+            Chart.defaults.interaction = {
+                intersect: false,
+                mode: 'index',
+                animationDuration: 0
+            };
+            Chart.defaults.interaction.animateOnHover = false;
+
+            // Disable tooltip animations
             Chart.defaults.plugins = Chart.defaults.plugins || {};
             Chart.defaults.plugins.tooltip = Chart.defaults.plugins.tooltip || {};
             Chart.defaults.plugins.tooltip.animation = { duration: 0 };
+
+            // Disable legend animations
+            Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
+            Chart.defaults.plugins.legend.animation = { duration: 0 };
+
+            // Disable ALL element animations
+            Chart.defaults.elements = Chart.defaults.elements || {};
+            Chart.defaults.elements.point = Chart.defaults.elements.point || {};
+            Chart.defaults.elements.point.hoverRadius = Chart.defaults.elements.point.radius;
+            Chart.defaults.elements.line = Chart.defaults.elements.line || {};
+            Chart.defaults.elements.bar = Chart.defaults.elements.bar || {};
+
+            // Disable scale animations
+            Chart.defaults.scales = Chart.defaults.scales || {};
+            Chart.defaults.scales.x = Chart.defaults.scales.x || {};
+            Chart.defaults.scales.y = Chart.defaults.scales.y || {};
+            Chart.defaults.scales.x.animation = { duration: 0 };
+            Chart.defaults.scales.y.animation = { duration: 0 };
+
             Chart.defaults.responsive = true;
         } catch (e) {
             console.warn('Unable to set Chart.js global defaults:', e);
+        }
+    }
+
+    // Helper function to ensure NO animations and NO zoom in any chart
+    getNoAnimationConfig() {
+        return {
+            animation: false,
+            animations: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            transitions: {
+                active: { animation: { duration: 0 } },
+                show: { animation: { duration: 0 } },
+                hide: { animation: { duration: 0 } },
+                resize: { animation: { duration: 0 } }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index',
+                animationDuration: 0
+            },
+            plugins: {
+                tooltip: {
+                    animation: { duration: 0 }
+                },
+                legend: {
+                    animation: { duration: 0 }
+                },
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: false
+                        },
+                        pinch: {
+                            enabled: false
+                        },
+                        drag: {
+                            enabled: false
+                        },
+                        mode: 'xy',
+                        rangeMin: {
+                            x: null,
+                            y: null
+                        },
+                        rangeMax: {
+                            x: null,
+                            y: null
+                        }
+                    },
+                    pan: {
+                        enabled: false,
+                        mode: 'xy',
+                        rangeMin: {
+                            x: null,
+                            y: null
+                        },
+                        rangeMax: {
+                            x: null,
+                            y: null
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    animation: { duration: 0 }
+                },
+                y: {
+                    animation: { duration: 0 }
+                }
+            }
+        };
+    }
+
+    // Force disable animations and zoom on any chart after creation
+    disableChartAnimations(chart) {
+        if (!chart) return;
+
+        try {
+            // Disable all possible animation properties
+            chart.options.animation = false;
+            chart.options.animations = false;
+            chart.options.animation = { duration: 0 };
+            chart.options.responsiveAnimationDuration = 0;
+
+            if (chart.options.transitions) {
+                chart.options.transitions.active = { animation: { duration: 0 } };
+                chart.options.transitions.show = { animation: { duration: 0 } };
+                chart.options.transitions.hide = { animation: { duration: 0 } };
+                chart.options.transitions.resize = { animation: { duration: 0 } };
+            }
+
+            // Disable zoom functionality completely
+            if (!chart.options.plugins) chart.options.plugins = {};
+            chart.options.plugins.zoom = {
+                zoom: { enabled: false },
+                pan: { enabled: false }
+            };
+
+            // Update the chart to apply changes
+            chart.update('none'); // 'none' mode = no animation
+        } catch (e) {
+            console.warn('Failed to disable animations/zoom on chart:', e);
         }
     }
 
@@ -651,7 +790,10 @@ class DashboardApp {
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
         });
-        document.querySelector(`[data-section="${section}"]`).classList.add('active');
+        const activeNavLink = document.querySelector(`[data-section="${section}"]`);
+        if (activeNavLink) {
+            activeNavLink.classList.add('active');
+        }
 
         // Hide all sections
         document.querySelectorAll('.content-section').forEach(sec => {
@@ -674,7 +816,6 @@ class DashboardApp {
                 analytics: 'Core Analytics',
                 organizations: 'Organization Insights',
                 demographics: 'Demographic Analysis',
-                correlations: 'Correlation Analysis',
                 insights: 'AI-Generated Insights',
                 advanced: 'Advanced Analytics & PCA',
                 network: 'Network Analysis & Flow'
@@ -696,9 +837,6 @@ class DashboardApp {
                 break;
             case 'demographics':
                 await this.loadDemographicsSection();
-                break;
-            case 'correlations':
-                await this.loadCorrelationsSection();
                 break;
             case 'advanced':
                 await this.loadAdvancedSection();
@@ -926,6 +1064,21 @@ class DashboardApp {
         return { minResponses, domain, scoreRange, sizeFilter };
     }
 
+    // Performance tab specific filters
+    getPerformanceFilters() {
+        const sortBy = (document.getElementById('orgSortBy') || {}).value || 'culture_score';
+        const timeRange = (document.getElementById('performanceTimeRange') || {}).value || 'all';
+        const topCount = parseInt((document.getElementById('topOrgCount') || {}).value || '20', 10);
+        return { sortBy, timeRange, topCount };
+    }
+
+    // Distribution tab specific filters
+    getDistributionFilters() {
+        const groupBy = (document.getElementById('distributionGroupBy') || {}).value || 'domain';
+        const metric = (document.getElementById('distributionMetric') || {}).value || 'count';
+        return { groupBy, metric };
+    }
+
     filterOrganizations(data) {
         if (!Array.isArray(data)) return [];
         const { minResponses, domain, scoreRange, sizeFilter } = this.getOrganizationFilters();
@@ -1069,14 +1222,11 @@ class DashboardApp {
 
     async setupOrgScatterChart() {
         try {
-            // Get current filter values
-            const filters = this.getOrganizationFilters();
+            // Check if we're in performance tab
+            const perfFilters = this.getPerformanceFilters();
             const params = new URLSearchParams({
-                limit: '100',
-                min_responses: filters.minResponses.toString(),
-                domain: filters.domain,
-                score_range: filters.scoreRange,
-                size_filter: filters.sizeFilter
+                limit: perfFilters.topCount.toString(),
+                min_responses: '1'
             });
 
             const organizationsData = await this.fetchWithCache(`/api/organizations?${params.toString()}`);
@@ -1106,7 +1256,7 @@ class DashboardApp {
                     data: domainOrgs.map(org => ({
                         x: org.response_count,
                         y: org.culture_score,
-                        r: Math.sqrt(org.employee_count) / 50 + 5
+                        r: Math.sqrt(org.employee_count || 1) / 50 + 5
                     })),
                     backgroundColor: domainColors[domain] || '#999',
                     borderColor: domainColors[domain] || '#999'
@@ -1163,14 +1313,11 @@ class DashboardApp {
 
     async setupTopOrgsChart() {
         try {
-            // Get current filter values
-            const filters = this.getOrganizationFilters();
+            // Get performance filter values
+            const perfFilters = this.getPerformanceFilters();
             const params = new URLSearchParams({
-                limit: '100',
-                min_responses: filters.minResponses.toString(),
-                domain: filters.domain,
-                score_range: filters.scoreRange,
-                size_filter: filters.sizeFilter
+                limit: perfFilters.topCount.toString(),
+                min_responses: '1'
             });
 
             const organizationsData = await this.fetchWithCache(`/api/organizations?${params.toString()}`);
@@ -1248,17 +1395,9 @@ class DashboardApp {
 
     async setupOrgSizeChart() {
         try {
-            // Get current filter values
-            const filters = this.getOrganizationFilters();
-            const params = new URLSearchParams({
-                limit: '100',
-                min_responses: filters.minResponses.toString(),
-                domain: filters.domain,
-                score_range: filters.scoreRange,
-                size_filter: filters.sizeFilter
-            });
-
-            const organizationsData = await this.fetchWithCache(`/api/organizations?${params.toString()}`);
+            // Get distribution filter values
+            const distFilters = this.getDistributionFilters();
+            const organizationsData = await this.fetchWithCache('/api/organizations?limit=100');
             const ctx = document.getElementById('orgSizeChart');
 
             if (!ctx || !organizationsData) return;
@@ -1267,56 +1406,84 @@ class DashboardApp {
                 this.charts.orgSizeChart.destroy();
             }
 
-            // Group by domain and employee size ranges
-            const sizeRanges = [
-                { min: 0, max: 1000, label: '<1K' },
-                { min: 1000, max: 5000, label: '1K-5K' },
-                { min: 5000, max: 20000, label: '5K-20K' },
-                { min: 20000, max: 100000, label: '20K-100K' },
-                { min: 100000, max: Infinity, label: '100K+' }
-            ];
+            // Group data based on filter
+            let groupedData = {};
+            organizationsData.forEach(org => {
+                let groupKey;
+                switch (distFilters.groupBy) {
+                    case 'domain':
+                        groupKey = org.domain || 'Unknown';
+                        break;
+                    case 'size':
+                        const size = org.employee_count || 0;
+                        if (size < 100) groupKey = 'Small (<100)';
+                        else if (size < 1000) groupKey = 'Medium (100-1K)';
+                        else if (size < 10000) groupKey = 'Large (1K-10K)';
+                        else groupKey = 'Enterprise (10K+)';
+                        break;
+                    case 'location':
+                        groupKey = 'United States'; // Placeholder since we don't have location data
+                        break;
+                    case 'industry':
+                        groupKey = org.domain || 'Unknown'; // Use domain as industry proxy
+                        break;
+                    default:
+                        groupKey = org.domain || 'Unknown';
+                }
 
-            const domainColors = {
-                'Healthcare': '#ff6b6b',
-                'University': '#4ecdc4',
-                'Business': '#45b7d1'
-            };
-
-            const filtered = this.filterOrganizations(organizationsData);
-            const datasets = [];
-            const domains = [...new Set(filtered.map(org => org.domain))];
-
-            domains.forEach(domain => {
-                const sizeCounts = sizeRanges.map(range => {
-                    return filtered.filter(org =>
-                        org.domain === domain &&
-                        org.employee_count >= range.min &&
-                        org.employee_count < range.max
-                    ).length;
-                });
-
-                datasets.push({
-                    label: domain,
-                    data: sizeCounts,
-                    backgroundColor: domainColors[domain] || '#999'
-                });
+                if (!groupedData[groupKey]) {
+                    groupedData[groupKey] = { count: 0, totalScore: 0, totalResponses: 0 };
+                }
+                groupedData[groupKey].count++;
+                groupedData[groupKey].totalScore += org.culture_score || 0;
+                groupedData[groupKey].totalResponses += org.response_count || 0;
             });
 
+            // Extract data based on metric
+            const labels = Object.keys(groupedData);
+            const data = labels.map(label => {
+                const group = groupedData[label];
+                switch (distFilters.metric) {
+                    case 'count':
+                        return group.count;
+                    case 'avg_score':
+                        return group.count > 0 ? group.totalScore / group.count : 0;
+                    case 'total_responses':
+                        return group.totalResponses;
+                    default:
+                        return group.count;
+                }
+            });
+
+            // Create pie/doughnut chart with filtered data
+            const backgroundColors = [
+                '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57',
+                '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43'
+            ];
+
             this.charts.orgSizeChart = new Chart(ctx, {
-                type: 'bar',
+                type: 'doughnut',
                 data: {
-                    labels: sizeRanges.map(r => r.label),
-                    datasets: datasets
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Organization Size' }
+                    animation: { duration: 0 },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Distribution by ${distFilters.groupBy} (${distFilters.metric})`,
+                            font: { size: 14 }
                         },
-                        y: {
-                            title: { display: true, text: 'Number of Organizations' }
+                        legend: {
+                            position: 'bottom'
                         }
                     }
                 }
@@ -1425,12 +1592,25 @@ class DashboardApp {
                     animation: {
                         duration: 0 // Disable animations to prevent looping issues
                     },
+                    plugins: {
+                        tooltip: {
+                            animation: { duration: 0 },
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.r.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         r: {
-                            min: 1,
-                            max: 4,
+                            min: 0,
+                            max: 100,
                             ticks: {
-                                stepSize: 0.5
+                                stepSize: 20,
+                                callback: function(value) {
+                                    return value + '%';
+                                }
                             },
                             animate: false // Disable scale animations
                         }
@@ -1439,6 +1619,51 @@ class DashboardApp {
             });
         } catch (error) {
             console.error('Failed to setup org radar chart:', error);
+        }
+    }
+
+    async updateOrgRadarChart() {
+        try {
+            const org1 = document.getElementById('radarOrg1')?.value;
+            const org2 = document.getElementById('radarOrg2')?.value;
+            const org3 = document.getElementById('radarOrg3')?.value;
+
+            if (!this.charts.orgRadarChart) return;
+
+            const datasets = [];
+            const colors = ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 205, 86, 0.2)'];
+            const borderColors = ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 205, 86, 1)'];
+
+            const organizations = [org1, org2, org3].filter(org => org && org !== 'all');
+
+            for (let i = 0; i < organizations.length; i++) {
+                const orgName = organizations[i];
+                try {
+                    const orgData = await this.fetchWithCache(`/api/organizations/sections?organization=${encodeURIComponent(orgName)}`);
+
+                    if (orgData) {
+                        const sectionOrder = ['Power Abuse Suppression', 'Discrimination Exclusion', 'Manipulative Work Culture', 'Failure of Accountability', 'Mental Health Harm', 'Erosion of Voice Autonomy'];
+                        const scores = sectionOrder.map(section => {
+                            return orgData[section]?.weighted_percentage || 0;
+                        });
+
+                        datasets.push({
+                            label: orgName,
+                            data: scores,
+                            backgroundColor: colors[i],
+                            borderColor: borderColors[i],
+                            borderWidth: 2
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Failed to load data for ${orgName}:`, error);
+                }
+            }
+
+            this.charts.orgRadarChart.data.datasets = datasets;
+            this.charts.orgRadarChart.update();
+        } catch (error) {
+            console.error('Failed to update org radar chart:', error);
         }
     }
 
@@ -1477,14 +1702,46 @@ class DashboardApp {
 
             const sortBySelect = document.getElementById('orgSortBy');
             if (sortBySelect && !sortBySelect.dataset.bound) {
-                sortBySelect.addEventListener('change', async () => { await this.setupTopOrgsChart(); });
+                sortBySelect.addEventListener('change', async () => {
+                    await this.setupTopOrgsChart();
+                    await this.setupOrgScatterChart();
+                });
                 sortBySelect.dataset.bound = '1';
             }
 
             const topCountSelect = document.getElementById('topOrgCount');
             if (topCountSelect && !topCountSelect.dataset.bound) {
-                topCountSelect.addEventListener('change', async () => { await this.setupTopOrgsChart(); });
+                topCountSelect.addEventListener('change', async () => {
+                    await this.setupTopOrgsChart();
+                    await this.setupOrgScatterChart();
+                });
                 topCountSelect.dataset.bound = '1';
+            }
+
+            const timeRangeSelect = document.getElementById('performanceTimeRange');
+            if (timeRangeSelect && !timeRangeSelect.dataset.bound) {
+                timeRangeSelect.addEventListener('change', async () => {
+                    await this.setupTopOrgsChart();
+                    await this.setupOrgScatterChart();
+                });
+                timeRangeSelect.dataset.bound = '1';
+            }
+
+            // Distribution filters
+            const distributionGroupBy = document.getElementById('distributionGroupBy');
+            if (distributionGroupBy && !distributionGroupBy.dataset.bound) {
+                distributionGroupBy.addEventListener('change', async () => {
+                    await this.setupOrgSizeChart();
+                });
+                distributionGroupBy.dataset.bound = '1';
+            }
+
+            const distributionMetric = document.getElementById('distributionMetric');
+            if (distributionMetric && !distributionMetric.dataset.bound) {
+                distributionMetric.addEventListener('change', async () => {
+                    await this.setupOrgSizeChart();
+                });
+                distributionMetric.dataset.bound = '1';
             }
 
             // Populate domain filter
@@ -1519,129 +1776,22 @@ class DashboardApp {
                 }
             });
 
+            // Add event listeners for radar org selectors
+            ['radarOrg1', 'radarOrg2', 'radarOrg3'].forEach(selectorId => {
+                const selector = document.getElementById(selectorId);
+                if (selector && !selector.dataset.radarBound) {
+                    selector.addEventListener('change', async () => {
+                        await this.updateOrgRadarChart();
+                    });
+                    selector.dataset.radarBound = '1';
+                }
+            });
+
         } catch (error) {
             console.error('Failed to setup org controls:', error);
         }
     }
 
-    async loadCorrelationsSection() {
-        try {
-            const correlationsData = await this.fetchWithCache('/api/correlations');
-            this.renderCorrelationTable(correlationsData);
-            this.renderCorrelationHeatmap(correlationsData);
-        } catch (error) {
-            console.error('Failed to load correlations section:', error);
-        }
-    }
-
-    renderCorrelationHeatmap(correlationsData) {
-        const ctx = document.getElementById('correlationHeatmap');
-        if (!ctx || !Array.isArray(correlationsData)) return;
-
-        // Build question label list Q1..Q22
-        const labels = Array.from({ length: 22 }, (_, i) => `Q${i + 1}`.toUpperCase());
-        const index = (q) => labels.indexOf(q.toUpperCase());
-
-        // Initialize full matrix with zeros and diagonal of 1
-        const size = labels.length;
-        const matrix = Array.from({ length: size }, () => Array(size).fill(0));
-        for (let i = 0; i < size; i++) matrix[i][i] = 1;
-
-        // Fill from pair list
-        correlationsData.forEach(p => {
-            const i = index(p['Question 1']);
-            const j = index(p['Question 2']);
-            if (i >= 0 && j >= 0) {
-                matrix[i][j] = p.Correlation;
-                matrix[j][i] = p.Correlation;
-            }
-        });
-
-        // Build scatter-like heatmap dataset
-        const points = [];
-        for (let y = 0; y < size; y++) {
-            for (let x = 0; x < size; x++) {
-                const v = matrix[y][x];
-                points.push({ x, y, v });
-            }
-        }
-
-        if (this.charts.correlationHeatmap) this.charts.correlationHeatmap.destroy();
-
-        const colorFor = (v) => {
-            const a = Math.min(1, Math.max(0.05, Math.abs(v)));
-            return v >= 0 ? `rgba(37,99,235,${a})` : `rgba(220,38,38,${a})`;
-        };
-
-        const rect = ctx.getBoundingClientRect();
-        const radius = Math.max(6, Math.floor(Math.min((rect.width||800)/size, (rect.height||500)/size)/2) - 2);
-        this.charts.correlationHeatmap = new Chart(ctx, {
-            type: 'scatter',
-            data: {
-                datasets: [{
-                    label: 'Correlation',
-                    data: points,
-                    backgroundColor: points.map(p => colorFor(p.v)),
-                    pointRadius: radius,
-                    pointStyle: 'rectRounded',
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-                plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                scales: {
-                    x: {
-                        type: 'linear',
-                        min: -0.5,
-                        max: size - 0.5,
-                        ticks: {
-                            stepSize: 1,
-                            callback: (v) => labels[v] || ''
-                        },
-                        grid: { display: false }
-                    },
-                    y: {
-                        reverse: true,
-                        type: 'linear',
-                        min: -0.5,
-                        max: size - 0.5,
-                        ticks: {
-                            stepSize: 1,
-                            callback: (v) => labels[v] || ''
-                        },
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-    }
-
-    renderCorrelationTable(correlationsData) {
-        const tableBody = document.querySelector('#correlationTable tbody');
-        if (!tableBody || !correlationsData) return;
-
-        const topCorrelations = correlationsData.sort((a, b) => Math.abs(b.Correlation) - Math.abs(a.Correlation)).slice(0, 20);
-
-        tableBody.innerHTML = topCorrelations.map(corr => `
-            <tr>
-                <td>${corr['Question 1']}</td>
-                <td>${corr['Question 2']}</td>
-                <td><span class="badge ${corr.Correlation > 0.5 ? 'bg-success' : corr.Correlation > 0.3 ? 'bg-warning' : 'bg-secondary'}">${corr.Correlation.toFixed(4)}</span></td>
-                <td>${this.getCorrelationStrength(Math.abs(corr.Correlation))}</td>
-            </tr>
-        `).join('');
-    }
-
-    getCorrelationStrength(abs_corr) {
-        if (abs_corr > 0.7) return 'Very Strong';
-        if (abs_corr > 0.5) return 'Strong';
-        if (abs_corr > 0.3) return 'Moderate';
-        if (abs_corr > 0.1) return 'Weak';
-        return 'Very Weak';
-    }
 
     async refreshData() {
         this.showLoadingOverlay('Refreshing data...');
@@ -1668,6 +1818,14 @@ class DashboardApp {
         } finally {
             this.hideLoadingOverlay();
         }
+    }
+
+    getScoreColor(score) {
+        // Return color based on culture score (0-4 scale typically)
+        if (score >= 3.5) return '#16a34a'; // Green - Good
+        if (score >= 2.5) return '#eab308'; // Yellow - Average
+        if (score >= 1.5) return '#ea580c'; // Orange - Below Average
+        return '#dc2626'; // Red - Poor
     }
 
     exportData() {
@@ -1723,7 +1881,6 @@ class DashboardApp {
             await this.setupPCAChart();
             await this.setupVarianceChart();
             await this.setupPCALoadingsChart();
-            await this.setupSectionCorrelationMatrix();
             await this.setupTreemapChart();
             await this.setupDemographicChart();
             // Prime hierarchical tab filters with domain options
@@ -1795,7 +1952,7 @@ class DashboardApp {
                     { label: 'PC1 |loading|', data: d1, backgroundColor: '#2563eb' },
                     { label: 'PC2 |loading|', data: d2, backgroundColor: '#dc2626' }
                 ] },
-                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', animation: { duration: 0 } }
             });
         } catch (error) {
             console.error('Failed to setup PCA loadings chart:', error);
@@ -1844,16 +2001,7 @@ class DashboardApp {
                             </div>
                         </div>
 
-                        <div class="col-12">
-                            <div class="chart-card">
-                                <div class="chart-header">
-                                    <h5 class="chart-title">Domain vs Tenure Heatmap</h5>
-                                </div>
-                                <div class="chart-body">
-                                    <canvas id="tenureHeatmap" style="height: 460px;"></canvas>
-                                </div>
-                            </div>
-                        </div>
+                        
                     </div>`;
 
                 container.dataset.initialized = 'true';
@@ -1869,7 +2017,6 @@ class DashboardApp {
             // Initial render
             const initial = (document.getElementById('demographicsCategory') || {}).value || 'tenure';
             await this.renderDemographicsOverview(initial);
-            await this.renderTenureHeatmap();
         } catch (error) {
             console.error('Failed to load demographics section:', error);
         }
@@ -1934,7 +2081,8 @@ class DashboardApp {
             }
 
             const color = (v) => {
-                const t = Math.max(0, Math.min(1, (v - 1) / (4 - 1)));
+                // Use HSEG scale (7-28) for color mapping
+                const t = Math.max(0, Math.min(1, (v - 7) / (28 - 7)));
                 const b = Math.round(255 * (1 - t));
                 const r = Math.round(255 * t);
                 return `rgba(${r},80,${b},0.85)`;
@@ -1960,7 +2108,12 @@ class DashboardApp {
 
     async setupPCAChart() {
         try {
-            const clusteringData = await this.fetchWithCache('/api/advanced/clustering');
+            // Get filter values
+            const pcaComponents = (document.getElementById('pcaComponents') || {}).value || '2';
+            const pcaFeatures = (document.getElementById('pcaFeatures') || {}).value || 'all';
+            const pcaScaling = (document.getElementById('pcaScaling') || {}).value || 'standard';
+
+            const clusteringData = await this.fetchWithCache(`/api/advanced/clustering?components=${pcaComponents}&features=${pcaFeatures}&scaling=${pcaScaling}`);
             const ctx = document.getElementById('pcaChart');
 
             if (!ctx || !clusteringData.pca_data) return;
@@ -1996,19 +2149,30 @@ class DashboardApp {
                 type: 'scatter',
                 data: { datasets },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...this.getNoAnimationConfig(),
                     scales: {
-                        x: { title: { display: true, text: 'PC1' }},
-                        y: { title: { display: true, text: 'PC2' }}
+                        x: {
+                            title: { display: true, text: 'PC1' },
+                            animation: { duration: 0 }
+                        },
+                        y: {
+                            title: { display: true, text: 'PC2' },
+                            animation: { duration: 0 }
+                        }
                     },
                     plugins: {
-                        title: { display: true, text: 'PCA Analysis - HSEG Cultural Risk Clustering' },
+                        title: {
+                            display: true,
+                            text: 'PCA Analysis - HSEG Cultural Risk Clustering',
+                            animation: { duration: 0 }
+                        },
                         subtitle: {
                             display: true,
-                            text: `${clusteringData.hseg_context?.total_samples || 0} samples | Avg Score: ${clusteringData.hseg_context?.score_stats?.mean || 'N/A'}`
+                            text: `${clusteringData.hseg_context?.total_samples || 0} samples | Avg Score: ${clusteringData.hseg_context?.score_stats?.mean || 'N/A'}`,
+                            animation: { duration: 0 }
                         },
                         tooltip: {
+                            animation: { duration: 0 },
                             callbacks: {
                                 title: function(context) {
                                     const point = clusteringData.pca_data[context[0].dataIndex];
@@ -2025,10 +2189,21 @@ class DashboardApp {
                                     ];
                                 }
                             }
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: { enabled: false },
+                                pinch: { enabled: false },
+                                drag: { enabled: false }
+                            },
+                            pan: { enabled: false }
                         }
                     }
                 }
             });
+
+            // Force disable any remaining animations
+            this.disableChartAnimations(this.charts.pcaChart);
         } catch (error) {
             console.error('Failed to setup PCA chart:', error);
         }
@@ -2069,6 +2244,7 @@ class DashboardApp {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: { duration: 0 },
                     plugins: {
                         title: {
                             display: true,
@@ -2101,56 +2277,6 @@ class DashboardApp {
         }
     }
 
-    async setupSectionCorrelationMatrix() {
-        try {
-            const resp = await this.fetchWithCache('/api/sections/correlation');
-            const ctx = document.getElementById('sectionCorrelationMatrix');
-            if (!ctx || !resp || !resp.labels || !resp.matrix || resp.matrix.length === 0) return;
-
-            const labels = resp.labels;
-            const size = labels.length;
-            const points = [];
-            for (let y = 0; y < size; y++) {
-                for (let x = 0; x < size; x++) {
-                    points.push({ x, y, v: resp.matrix[y][x] });
-                }
-            }
-
-            if (this.charts.sectionCorrelationMatrix) this.charts.sectionCorrelationMatrix.destroy();
-
-            const colorFor = (v) => {
-                const a = Math.min(1, Math.max(0.05, Math.abs(v)));
-                return v >= 0 ? `rgba(37,99,235,${a})` : `rgba(220,38,38,${a})`;
-            };
-
-            const rect = ctx.getBoundingClientRect();
-            const radius = Math.max(6, Math.floor(Math.min((rect.width||800)/size, (rect.height||500)/size)/2) - 2);
-            this.charts.sectionCorrelationMatrix = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        data: points,
-                        backgroundColor: points.map(p => colorFor(p.v)),
-                        pointRadius: radius,
-                        pointStyle: 'rectRounded',
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    scales: {
-                        x: { type: 'linear', min: -0.5, max: size - 0.5, ticks: { stepSize: 1, callback: (v) => labels[v] || '' }, grid: { display: false } },
-                        y: { type: 'linear', min: -0.5, max: size - 0.5, reverse: true, ticks: { stepSize: 1, callback: (v) => labels[v] || '' }, grid: { display: false } }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Failed to setup correlation matrix:', error);
-        }
-    }
 
     async setupTreemapChart() {
         try {
@@ -2158,63 +2284,188 @@ class DashboardApp {
             const minCount = (document.getElementById('hierarchicalMinResponses') || {}).value || 5;
             const domain = (document.getElementById('hierarchicalDomain') || {}).value || 'all';
 
-            const treemapData = await this.fetchWithCache(`/api/advanced/treemap?min_count=${minCount}&domain=${domain}`);
+            const treemapData = await this.fetchWithCache(`/api/advanced/hierarchical?min_count=${minCount}&domain=${domain}`);
             const container = document.getElementById('treemapChart');
 
-            if (!container || !treemapData || treemapData.length === 0) {
-                if (container) container.innerHTML = '<div class="alert alert-info">No treemap data available with current filters</div>';
+            if (!container) return;
+
+            // Clear container
+            container.innerHTML = '';
+
+            if (!treemapData || treemapData.length === 0) {
+                container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-muted" style="min-height:300px;">No organizational data available with current filters</div>';
                 return;
             }
 
-            // Clear container and create treemap using Plotly
-            container.innerHTML = '';
+            // Debug logging
+            console.log('Treemap data received:', treemapData.length, 'items');
 
-            // Prepare data for Plotly treemap
-            const ids = treemapData.map(d => d.ids);
-            const labels = treemapData.map(d => d.labels);
-            const parents = treemapData.map(d => d.parents);
-            const values = treemapData.map(d => d.values);
-            const scores = treemapData.map(d => d.score);
+            // Check if Plotly is available
+            if (typeof Plotly !== 'undefined') {
+                // Create proper hierarchical structure for treemap
+                const hierarchyMap = {};
 
-            const trace = {
-                type: 'treemap',
-                ids: ids,
-                labels: labels,
-                parents: parents,
-                values: values,
-                text: labels.map((label, i) => `${label}<br>Responses: ${values[i]}<br>Score: ${scores[i].toFixed(2)}`),
-                textinfo: 'label+value',
-                hovertemplate: '<b>%{label}</b><br>Responses: %{value}<br>Culture Score: %{color:.2f}<extra></extra>',
-                colorscale: 'RdYlBu_r',
-                colorbar: {
-                    title: 'Culture Score',
-                    titleside: 'right'
-                },
-                marker: {
-                    colorscale: 'RdYlBu_r',
-                    color: scores,
-                    colorbar: { title: 'Culture Score' },
-                    line: { width: 2, color: 'white' }
-                }
-            };
+                // Build hierarchy: Domain -> Organization -> Department
+                treemapData.forEach(item => {
+                    const domain = item.domain || 'Unknown Domain';
+                    const org = item.organization || 'Unknown Organization';
+                    const dept = item.department || 'Unknown Department';
 
-            const layout = {
-                title: {
-                    text: 'Organizational Structure Treemap (6.2)<br><sub>Size = Response Count, Color = Culture Score</sub>',
-                    font: { size: 16 }
-                },
-                margin: { t: 50, l: 10, r: 10, b: 10 },
-                font: { size: 12 }
-            };
+                    if (!hierarchyMap[domain]) hierarchyMap[domain] = {};
+                    if (!hierarchyMap[domain][org]) hierarchyMap[domain][org] = {};
 
-            const config = {
-                responsive: true,
-                displayModeBar: true,
-                modeBarButtonsToAdd: ['zoom2d', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'resetScale2d'],
-                modeBarButtonsToRemove: ['lasso2d', 'select2d']
-            };
+                    hierarchyMap[domain][org][dept] = {
+                        count: item.count || 1,
+                        score: item.avg_culture_score || 0
+                    };
+                });
 
-            Plotly.newPlot(container, [trace], layout, config);
+                // Prepare data for Plotly treemap
+                const labels = [];
+                const parents = [];
+                const values = [];
+                const colors = [];
+
+                // Add root domains
+                Object.keys(hierarchyMap).forEach(domain => {
+                    labels.push(domain);
+                    parents.push('');
+
+                    let domainTotal = 0;
+                    let domainScoreSum = 0;
+                    let domainCount = 0;
+
+                    Object.keys(hierarchyMap[domain]).forEach(org => {
+                        Object.keys(hierarchyMap[domain][org]).forEach(dept => {
+                            const data = hierarchyMap[domain][org][dept];
+                            domainTotal += data.count;
+                            domainScoreSum += data.score * data.count;
+                            domainCount += data.count;
+                        });
+                    });
+
+                    values.push(domainTotal);
+                    colors.push(domainCount > 0 ? domainScoreSum / domainCount : 0);
+                });
+
+                // Add organizations
+                Object.keys(hierarchyMap).forEach(domain => {
+                    Object.keys(hierarchyMap[domain]).forEach(org => {
+                        labels.push(`${org}`);
+                        parents.push(domain);
+
+                        let orgTotal = 0;
+                        let orgScoreSum = 0;
+                        let orgCount = 0;
+
+                        Object.keys(hierarchyMap[domain][org]).forEach(dept => {
+                            const data = hierarchyMap[domain][org][dept];
+                            orgTotal += data.count;
+                            orgScoreSum += data.score * data.count;
+                            orgCount += data.count;
+                        });
+
+                        values.push(orgTotal);
+                        colors.push(orgCount > 0 ? orgScoreSum / orgCount : 0);
+
+                        // Add departments
+                        Object.keys(hierarchyMap[domain][org]).forEach(dept => {
+                            const data = hierarchyMap[domain][org][dept];
+                            labels.push(`${dept}`);
+                            parents.push(`${org}`);
+                            values.push(data.count);
+                            colors.push(data.score);
+                        });
+                    });
+                });
+
+                const trace = {
+                    type: 'treemap',
+                    labels: labels,
+                    parents: parents,
+                    values: values,
+                    marker: {
+                        colors: colors,
+                        colorscale: 'RdBu',
+                        reversescale: true,
+                        colorbar: {
+                            title: 'Avg Culture Score',
+                            titleside: 'right'
+                        },
+                        line: { width: 2, color: 'white' }
+                    },
+                    textinfo: 'label+value',
+                    hovertemplate: '%{label}<br>Responses: %{value}<br>Avg Score: %{color:.2f}<extra></extra>'
+                };
+
+                const layout = {
+                    title: 'Organizational Structure Overview',
+                    font: { size: 12 },
+                    margin: { t: 50, l: 10, r: 10, b: 10 },
+                    height: 400
+                };
+
+                const config = {
+                    displayModeBar: false,
+                    responsive: true
+                };
+
+                Plotly.newPlot(container, [trace], layout, config);
+
+            } else {
+                // Fallback without Plotly
+                container.style.position = 'relative';
+                container.style.height = '400px';
+                container.style.backgroundColor = '#f8f9fa';
+                container.style.border = '1px solid #dee2e6';
+                container.style.borderRadius = '6px';
+
+                const maxCount = Math.max(...treemapData.map(d => d.count || 1), 1);
+
+                treemapData.slice(0, 24).forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    const count = item.count || 1;
+                    const ratio = count / maxCount;
+                    const size = Math.max(50, Math.sqrt(ratio) * 120);
+
+                    div.style.position = 'absolute';
+                    div.style.width = `${size}px`;
+                    div.style.height = `${size}px`;
+                    div.style.left = `${(idx % 6) * 140 + 10}px`;
+                    div.style.top = `${Math.floor(idx / 6) * 140 + 10}px`;
+                    div.style.backgroundColor = this.getScoreColor(item.avg_culture_score || 0);
+                    div.style.color = '#fff';
+                    div.style.display = 'flex';
+                    div.style.flexDirection = 'column';
+                    div.style.alignItems = 'center';
+                    div.style.justifyContent = 'center';
+                    div.style.borderRadius = '8px';
+                    div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    div.style.cursor = 'pointer';
+                    div.style.fontSize = '11px';
+                    div.style.textAlign = 'center';
+                    div.style.padding = '4px';
+
+                    div.title = `${item.domain || 'Unknown'} → ${item.organization || 'Unknown'} → ${item.department || 'Unknown'}\nResponses: ${item.count || 0}\nAvg Score: ${(item.avg_culture_score || 0).toFixed(2)}`;
+
+                    const orgName = (item.organization || 'Unknown').slice(0, 12);
+                    const deptName = (item.department || 'Unknown').slice(0, 10);
+
+                    div.innerHTML = `<div style="font-weight:bold;font-size:10px;">${orgName}</div><div style="font-size:9px;">${deptName}</div><div style="font-size:8px;margin-top:2px;">${item.count || 0}</div>`;
+
+                    container.appendChild(div);
+                });
+
+                // Add title
+                const titleDiv = document.createElement('div');
+                titleDiv.style.position = 'absolute';
+                titleDiv.style.top = '5px';
+                titleDiv.style.left = '10px';
+                titleDiv.style.fontWeight = 'bold';
+                titleDiv.style.color = '#495057';
+                titleDiv.innerHTML = 'Organizational Structure Overview';
+                container.appendChild(titleDiv);
+            }
 
         } catch (error) {
             console.error('Failed to setup treemap chart:', error);
@@ -2225,15 +2476,36 @@ class DashboardApp {
 
     async setupRidgePlot() {
         try {
+            console.log('📊 setupRidgePlot called');
+
             // Get filter values
             const domain = (document.getElementById('hierarchicalDomain') || {}).value || 'all';
             const bins = (document.getElementById('ridgeBins') || {}).value || 30;
 
+            console.log('📊 Ridge plot filters:', { domain, bins });
+
             const ridgeData = await this.fetchWithCache(`/api/advanced/ridge?domain=${domain}&bins=${bins}`);
             const container = document.getElementById('ridgePlot');
 
-            if (!container || !ridgeData || ridgeData.domains.length === 0) {
-                if (container) container.innerHTML = '<div class="alert alert-info">No ridge plot data available</div>';
+            console.log('📊 Container found:', !!container);
+            console.log('📊 Ridge data received:', ridgeData ? 'yes' : 'no');
+            console.log('📊 Domains count:', ridgeData?.domains?.length || 0);
+
+            if (!container) {
+                console.error('📊 Container ridgePlot not found!');
+                return;
+            }
+
+            if (!ridgeData || !ridgeData.domains || ridgeData.domains.length === 0) {
+                console.log('📊 No ridge data available');
+                container.innerHTML = '<div class="alert alert-info">No ridge plot data available</div>';
+                return;
+            }
+
+            // Check if Plotly is available
+            console.log('📊 Plotly available:', typeof Plotly !== 'undefined');
+            if (typeof Plotly === 'undefined') {
+                container.innerHTML = '<div class="alert alert-warning">Ridge plot requires Plotly.js. Please check your internet connection.</div>';
                 return;
             }
 
@@ -2283,7 +2555,7 @@ class DashboardApp {
 
             const layout = {
                 title: {
-                    text: 'Ridge Plots for Section Score Distributions (6.1)<br><sub>Cultural Assessment by Domain and Section</sub>',
+                    text: 'Section Score Distributions<br><sub>Cultural Assessment by Domain and Section</sub>',
                     font: { size: 16 }
                 },
                 xaxis: {
@@ -2313,65 +2585,145 @@ class DashboardApp {
                 modeBarButtonsToRemove: ['lasso2d', 'select2d']
             };
 
-            Plotly.newPlot(container, traces, layout, config);
+            console.log('📊 About to create Plotly ridge plot with', traces.length, 'traces');
+
+            try {
+                await Plotly.newPlot(container, traces, layout, config);
+                console.log('📊 Ridge plot created successfully!');
+            } catch (plotlyError) {
+                console.error('📊 Plotly ridge plot error:', plotlyError);
+                container.innerHTML = `<div class="alert alert-danger">Plotly ridge plot error: ${plotlyError.message}</div>`;
+            }
 
         } catch (error) {
-            console.error('Failed to setup ridge plot:', error);
+            console.error('📊 Failed to setup ridge plot:', error);
             const container = document.getElementById('ridgePlot');
-            if (container) container.innerHTML = '<div class="alert alert-danger">Error loading ridge plot visualization</div>';
+            if (container) container.innerHTML = `<div class="alert alert-danger">Error loading ridge plot visualization: ${error.message}</div>`;
         }
     }
 
-    async setupSunburstChart() {
+    async setupSunburstChart() { return;
         try {
+            console.log('🌻 setupSunburstChart called');
+
             // Get filter values
             const minCount = (document.getElementById('hierarchicalMinResponses') || {}).value || 3;
             const domain = (document.getElementById('hierarchicalDomain') || {}).value || 'all';
 
+            console.log('🌻 Filter values:', { minCount, domain });
+
             const sunburstData = await this.fetchWithCache(`/api/advanced/sunburst?min_count=${minCount}&domain=${domain}`);
             const container = document.getElementById('sunburstChart');
 
-            if (!container || !sunburstData || sunburstData.length === 0) {
-                if (container) container.innerHTML = '<div class="alert alert-info">No sunburst data available with current filters</div>';
+            console.log('🌻 Container found:', !!container);
+            console.log('🌻 Sunburst data received:', sunburstData?.length || 0, 'items');
+
+            if (sunburstData && sunburstData.length > 0) {
+                console.log('🌻 Sample sunburst data:', sunburstData[0]);
+            }
+
+            if (!container) {
+                console.error('🌻 Container not found: sunburstChart');
+                return;
+            }
+
+            if (!sunburstData || sunburstData.length === 0) {
+                console.log('🌻 No data available');
+                container.innerHTML = '<div class="alert alert-info">No sunburst data available with current filters</div>';
                 return;
             }
 
             // Clear container
             container.innerHTML = '';
 
-            // Prepare data for Plotly sunburst
-            const ids = sunburstData.map(d => d.ids);
-            const labels = sunburstData.map(d => d.labels);
-            const parents = sunburstData.map(d => d.parents);
-            const values = sunburstData.map(d => d.values);
-            const scores = sunburstData.map(d => d.score);
+            // Check if Plotly is available
+            console.log('🌻 Plotly available:', typeof Plotly !== 'undefined');
+            if (typeof Plotly === 'undefined') {
+                container.innerHTML = '<div class="alert alert-warning">Sunburst visualization requires Plotly.js. Please check your internet connection or install Plotly.js.</div>';
+                return;
+            }
+
+            // Build proper hierarchical structure for sunburst
+            const hierarchyNodes = new Set();
+            const labels = [];
+            const parents = [];
+            const values = [];
+            const colors = [];
+
+            // First, collect all unique domains and position levels
+            const domains = [...new Set(sunburstData.map(d => d.domain))];
+            const domainPositions = {};
+
+            sunburstData.forEach(d => {
+                if (!domainPositions[d.domain]) {
+                    domainPositions[d.domain] = new Set();
+                }
+                domainPositions[d.domain].add(d.position_level);
+            });
+
+            // Add root domains
+            domains.forEach(domain => {
+                if (!hierarchyNodes.has(domain)) {
+                    labels.push(domain);
+                    parents.push('');
+                    values.push(0); // Will be calculated by Plotly
+                    colors.push(0);
+                    hierarchyNodes.add(domain);
+                }
+            });
+
+            // Add domain/position level combinations
+            Object.entries(domainPositions).forEach(([domain, positions]) => {
+                positions.forEach(position => {
+                    const positionKey = `${domain} - ${position}`;
+                    if (!hierarchyNodes.has(positionKey)) {
+                        labels.push(positionKey);
+                        parents.push(domain);
+                        values.push(0);
+                        colors.push(0);
+                        hierarchyNodes.add(positionKey);
+                    }
+                });
+            });
+
+            // Add department leaf nodes
+            sunburstData.forEach(d => {
+                const parentKey = `${d.domain} - ${d.position_level}`;
+                const leafKey = `${d.domain} - ${d.position_level} - ${d.department}`;
+
+                labels.push(leafKey);
+                parents.push(parentKey);
+                values.push(d.count);
+                colors.push(d.avg_culture_score);
+            });
 
             const trace = {
                 type: 'sunburst',
-                ids: ids,
                 labels: labels,
                 parents: parents,
                 values: values,
-                hovertemplate: '<b>%{label}</b><br>Responses: %{value}<br>Culture Score: %{color:.2f}<extra></extra>',
-                leaf: { opacity: 0.8 },
                 marker: {
-                    colorscale: 'RdYlBu_r',
-                    color: scores,
+                    colors: colors,
+                    colorscale: 'RdBu',
+                    reversescale: true,
                     colorbar: {
                         title: 'Culture Score',
                         titleside: 'right'
                     },
                     line: { width: 2, color: 'white' }
                 },
-                branchvalues: 'total'
+                branchvalues: 'total',
+                hovertemplate: '<b>%{label}</b><br>Responses: %{value}<br>Culture Score: %{marker.color:.2f}<extra></extra>',
+                leaf: { opacity: 0.8 }
             };
 
             const layout = {
                 title: {
-                    text: 'Organizational Hierarchy Sunburst (6.3)<br><sub>Domain → Position Level → Department</sub>',
+                    text: 'Position Hierarchy Sunburst<br><sub>Domain → Position Level → Department</sub>',
                     font: { size: 16 }
                 },
                 margin: { t: 80, l: 10, r: 10, b: 10 },
+                height: 420,
                 font: { size: 12 }
             };
 
@@ -2382,12 +2734,28 @@ class DashboardApp {
                 modeBarButtonsToRemove: ['lasso2d', 'select2d']
             };
 
-            Plotly.newPlot(container, [trace], layout, config);
+            console.log('🌻 About to create Plotly sunburst with:', {
+                labels: labels.length,
+                parents: parents.length,
+                values: values.length,
+                colors: colors.length
+            });
+
+            console.log('🌻 Sample labels:', labels.slice(0, 5));
+            console.log('🌻 Sample parents:', parents.slice(0, 5));
+
+            try {
+                await Plotly.newPlot(container, [trace], layout, config);
+                console.log('🌻 Plotly sunburst created successfully!');
+            } catch (plotlyError) {
+                console.error('🌻 Plotly error:', plotlyError);
+                container.innerHTML = `<div class="alert alert-danger">Plotly rendering error: ${plotlyError.message}</div>`;
+            }
 
         } catch (error) {
-            console.error('Failed to setup sunburst chart:', error);
+            console.error('🌻 Failed to setup sunburst chart:', error);
             const container = document.getElementById('sunburstChart');
-            if (container) container.innerHTML = '<div class="alert alert-danger">Error loading sunburst visualization</div>';
+            if (container) container.innerHTML = `<div class="alert alert-danger">Error loading sunburst visualization: ${error.message}</div>`;
         }
     }
 
@@ -2935,7 +3303,10 @@ class DashboardApp {
     async loadAdvancedTabData(tabId) {
         switch (tabId) {
             case 'pca':
-                await this.loadAdvancedSection();
+                // Only load PCA-specific charts, not all advanced charts
+                await this.setupPCAChart();
+                await this.setupVarianceChart();
+                await this.setupPCALoadingsChart();
                 break;
             case 'clustering':
                 await this.setupClusteringChart();
@@ -2947,7 +3318,6 @@ class DashboardApp {
                 await this.setupHierarchicalChart();
                 await this.setupTreemapChart();
                 await this.setupRidgePlot();
-                await this.setupSunburstChart();
                 break;
         }
     }
@@ -3000,11 +3370,9 @@ class DashboardApp {
             const dom = (document.getElementById('hierarchicalDomain') || {}).value || 'all';
 
             const treemapEl = document.getElementById('treemapChart');
-            const sunburstWrap = document.getElementById('sunburstContainer');
             if (!treemapEl) return;
 
             if (type === 'treemap') {
-                if (sunburstWrap) sunburstWrap.style.display = 'none';
                 treemapEl.style.display = '';
                 const params = new URLSearchParams({ min_count: String(minResp), domain: dom, _: String(Date.now()) });
                 const data = await this.fetchWithCache(`/api/advanced/hierarchical?${params.toString()}`);
@@ -3029,10 +3397,12 @@ class DashboardApp {
                     // Simple fallback
                     treemapEl.style.position = 'relative'; treemapEl.style.height = '400px';
                     if (!data || data.length === 0) return;
-                    const maxCount = Math.max(...data.map(d => d.count));
+                    const maxCount = Math.max(...data.map(d => d.count || 1), 1);
                     data.slice(0, 30).forEach((item, idx) => {
                         const div = document.createElement('div');
-                        const size = Math.max(40, Math.sqrt(item.count / maxCount) * 120);
+                        const count = item.count || 1;
+                        const ratio = count / maxCount;
+                        const size = Math.max(40, Math.sqrt(ratio) * 120);
                         div.style.position = 'absolute';
                         div.style.width = `${size}px`; div.style.height = `${size}px`;
                         div.style.left = `${(idx % 6) * 130}px`; div.style.top = `${Math.floor(idx / 6) * 130}px`;
@@ -3046,28 +3416,6 @@ class DashboardApp {
                         treemapEl.appendChild(div);
                     });
                 }
-            } else if (type === 'sunburst') {
-                treemapEl.style.display = 'none';
-                if (sunburstWrap) sunburstWrap.style.display = '';
-                const params = new URLSearchParams({ min_count: String(minResp), domain: dom, _: String(Date.now()) });
-                const data = await this.fetchWithCache(`/api/advanced/sunburst?${params.toString()}`);
-                const sb = document.getElementById('sunburstPlot');
-                if (window.Plotly && sb && Array.isArray(data)) {
-                    const labels = data.map(d=>`${d.domain} / ${d.position_level} / ${d.department}`);
-                    const parents = data.map(d=>`${d.domain} / ${d.position_level}`);
-                    const values = data.map(d=>d.count);
-                    const colors = data.map(d=>d.avg_culture_score);
-                    const trace = { type:'sunburst', labels, parents, values, marker:{colors, colorscale:'RdBu', reversescale:true}, branchvalues:'total', hovertemplate:'%{label}<br>Responses: %{value}<br>Avg Score: %{marker.color:.2f}<extra></extra>' };
-                    const layout = { height: 420, margin:{t:10,l:0,r:0,b:0} };
-                    Plotly.react(sb, [trace], layout, {displayModeBar:false});
-                } else {
-                    sb.innerHTML = '<div class="text-muted">Sunburst view requires Plotly. Please connect to internet.</div>';
-                }
-            } else {
-                // dendrogram not implemented; show info prominently
-                if (sunburstWrap) sunburstWrap.style.display = 'none';
-                treemapEl.style.display = '';
-                treemapEl.innerHTML = '<div class="d-flex w-100 h-100 align-items-center justify-content-center text-muted" style="min-height:360px">Dendrogram view not available in this build</div>';
             }
 
             // Always update ridge-like chart for selected domain
@@ -3077,25 +3425,149 @@ class DashboardApp {
         }
     }
 
+    async setupDendrogramChart(minCount = 5, domain = 'all') {
+        try {
+            console.log('🌳 setupDendrogramChart called');
+
+            const container = document.getElementById('treemapChart');
+            if (!container) return;
+
+            const data = await this.fetchWithCache(`/api/advanced/hierarchical?min_count=${minCount}&domain=${domain}`);
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="d-flex align-items-center justify-content-center h-100 text-muted" style="min-height:360px;">No data available for dendrogram</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            if (typeof Plotly !== 'undefined') {
+                // Create a simple dendrogram using domain->org->dept hierarchy
+                const domains = [...new Set(data.map(d => d.domain))];
+                const nodes = [];
+                const links = [];
+                let nodeId = 0;
+
+                // Create root node
+                nodes.push({ id: nodeId++, name: 'Organizations', level: 0, x: 300, y: 50 });
+
+                domains.forEach((domain, dIdx) => {
+                    const domainId = nodeId++;
+                    nodes.push({
+                        id: domainId,
+                        name: domain,
+                        level: 1,
+                        x: 150 + dIdx * 300,
+                        y: 150
+                    });
+                    links.push({ source: 0, target: domainId });
+
+                    const domainOrgs = [...new Set(data.filter(d => d.domain === domain).map(d => d.organization))];
+                    domainOrgs.forEach((org, oIdx) => {
+                        const orgId = nodeId++;
+                        nodes.push({
+                            id: orgId,
+                            name: org.length > 15 ? org.substring(0, 15) + '...' : org,
+                            level: 2,
+                            x: 100 + dIdx * 300 + oIdx * 100,
+                            y: 250
+                        });
+                        links.push({ source: domainId, target: orgId });
+                    });
+                });
+
+                // Create a simple tree visualization
+                const trace = {
+                    x: nodes.map(n => n.x),
+                    y: nodes.map(n => n.y),
+                    text: nodes.map(n => n.name),
+                    mode: 'markers+text',
+                    type: 'scatter',
+                    textposition: 'bottom center',
+                    marker: {
+                        size: nodes.map(n => n.level === 0 ? 15 : n.level === 1 ? 12 : 8),
+                        color: nodes.map(n => n.level === 0 ? '#1f77b4' : n.level === 1 ? '#ff7f0e' : '#2ca02c'),
+                    }
+                };
+
+                // Add connection lines
+                const lineTraces = links.map(link => {
+                    const source = nodes[link.source];
+                    const target = nodes[link.target];
+                    return {
+                        x: [source.x, target.x],
+                        y: [source.y, target.y],
+                        mode: 'lines',
+                        type: 'scatter',
+                        line: { color: '#999', width: 1 },
+                        showlegend: false,
+                        hoverinfo: 'skip'
+                    };
+                });
+
+                const layout = {
+                    title: 'Organization Hierarchy Dendrogram',
+                    showlegend: false,
+                    height: 400,
+                    xaxis: { showgrid: false, showticklabels: false, zeroline: false },
+                    yaxis: { showgrid: false, showticklabels: false, zeroline: false },
+                    margin: { t: 40, l: 20, r: 20, b: 20 }
+                };
+
+                await Plotly.newPlot(container, [trace, ...lineTraces], layout, { displayModeBar: false });
+                console.log('🌳 Dendrogram created successfully!');
+            } else {
+                container.innerHTML = `
+                    <div class="p-4">
+                        <h6>Organization Hierarchy Structure</h6>
+                        <div class="simple-tree">
+                            ${domains.slice(0, 5).map(domain => `
+                                <div class="domain-node mb-3">
+                                    <strong>${domain}</strong>
+                                    ${[...new Set(data.filter(d => d.domain === domain).map(d => d.organization))].slice(0, 3).map(org => `
+                                        <div class="org-node ms-3">
+                                            • ${org.length > 30 ? org.substring(0, 30) + '...' : org}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('🌳 Failed to setup dendrogram chart:', error);
+            const container = document.getElementById('treemapChart');
+            if (container) container.innerHTML = '<div class="alert alert-danger">Error loading dendrogram visualization</div>';
+        }
+    }
+
     async setupRidgeChart(domain) {
         try {
             const ctx = document.getElementById('ridgeChart');
             if (!ctx) return;
             const data = await this.fetchWithCache(`/api/advanced/ridge?domain=${encodeURIComponent(domain || 'all')}&bins=30`);
-            if (!data || !data.sections) return;
+            if (!data || !data.domains || data.domains.length === 0) return;
 
             if (this.charts.ridgeChart) this.charts.ridgeChart.destroy();
 
-            const labels = data.x.map(v => Number(v).toFixed(2));
-            const color = (i)=>`hsl(${(i*55)%360} 70% 50%)`;
-            const sections = Object.keys(data.sections);
-            const maxY = Math.max(...sections.flatMap(s => data.sections[s].y));
-            const offset = maxY * 1.2;
-            const datasets = sections.map((name, i) => ({
-                label: name,
-                data: data.sections[name].y.map(v => v + i*offset),
+            // Get the first domain's distributions (or combine all domains)
+            const allDistributions = data.domains.flatMap(d => d.distributions);
+            if (allDistributions.length === 0) return;
+
+            // Use x values from the first distribution (they should be the same for all)
+            const labels = allDistributions[0].x.map(v => Number(v).toFixed(2));
+            const color = (i) => `hsl(${(i*55)%360} 70% 50%)`;
+
+            // Calculate max density for offset calculation
+            const maxDensity = Math.max(...allDistributions.flatMap(d => d.density));
+            const offset = maxDensity * 1.2;
+
+            const datasets = allDistributions.map((distribution, i) => ({
+                label: distribution.section,
+                data: distribution.density.map(v => v + i * offset),
                 borderColor: color(i),
-                backgroundColor: color(i)+'33',
+                backgroundColor: color(i) + '33',
                 tension: 0.25,
                 fill: true
             }));
@@ -3103,7 +3575,26 @@ class DashboardApp {
             this.charts.ridgeChart = new Chart(ctx, {
                 type: 'line',
                 data: { labels, datasets },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }, scales: { y: { display: false } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 0 }, // Disable animations
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12 }
+                        }
+                    },
+                    scales: {
+                        y: { display: false },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Culture Score'
+                            }
+                        }
+                    }
+                }
             });
         } catch (error) {
             console.error('Failed to setup ridge chart:', error);
@@ -3211,15 +3702,35 @@ class DashboardApp {
         // Debounce filter changes to avoid too many API calls
         clearTimeout(this.filterTimeout);
         this.filterTimeout = setTimeout(() => {
-            this.applyFilters();
+            this.applyFilters(filterId);
         }, 300);
     }
 
-    applyFilters() {
-        // Apply all current filter values and refresh charts
+    applyFilters(filterId) {
+        // Apply all current filter values and refresh appropriate charts
         const activeTab = document.querySelector('.tab-pane.show.active');
+
         if (activeTab) {
-            this.loadTabData(activeTab);
+            const tabId = activeTab.id;
+
+            // Handle specific filter updates for advanced analytics
+            if (filterId && filterId.includes('pca')) {
+                // PCA filter changed - update PCA related charts
+                this.setupPCAChart();
+                this.setupPCALoadingsChart();
+                this.setupVarianceChart();
+            } else if (filterId && filterId.includes('clustering')) {
+                // Clustering filter changed - update clustering chart
+                this.setupClusteringChart();
+            } else if (filterId && filterId.includes('hierarchical')) {
+                // Hierarchical filter changed - update hierarchical charts
+                this.setupHierarchicalChart();
+                this.setupTreemapChart();
+                this.setupRidgePlot();
+            } else {
+                // General filter change - reload tab data
+                this.loadTabData(activeTab);
+            }
         }
     }
 
@@ -3676,7 +4187,13 @@ class DashboardApp {
 
     async setupClusteringChart() {
         try {
-            const data = await this.fetchWithCache('/api/advanced/clustering');
+            // Get filter values
+            const algorithm = (document.getElementById('clusteringAlgorithm') || {}).value || 'kmeans';
+            const clusterCount = (document.getElementById('clusterCount') || {}).value || '4';
+            const metric = (document.getElementById('clusterMetric') || {}).value || 'euclidean';
+            const clusterBy = (document.getElementById('clusterBy') || {}).value || 'organization';
+
+            const data = await this.fetchWithCache(`/api/advanced/clustering?algorithm=${algorithm}&clusters=${clusterCount}&metric=${metric}&cluster_by=${clusterBy}`);
             const ctx = document.getElementById('clusteringChart');
             if (!ctx || !data) return;
 
@@ -3943,7 +4460,6 @@ DashboardApp.prototype.setupAdvancedCorrelations = async function() {
             const data = await this.fetchWithCache('/api/correlations');
             this.renderCorrelationHeatmap(data);
         } else {
-            await this.setupSectionCorrelationMatrix();
         }
     } catch (e) {
         console.error('Failed to setup advanced correlations:', e);
