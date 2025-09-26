@@ -291,18 +291,6 @@ python -c "import json; data=json.load(open('hseg_final_dataset.json')); print(f
 # Should output: Total items: 49550
 ```
 
-## 📝 License
-
-[Add your license information here]
-
-## 🤝 Contributing
-
-[Add contributing guidelines here]
-
-## 📞 Support
-
-[Add contact information or support details here]
-
 ---
 
 ## ⚡ Quick Commands Reference
@@ -336,3 +324,6 @@ ls -lh hseg_final_dataset.json # Check merged file (if created)
 ```
 
 **Note**: The application now works directly with chunked data files - no manual merging required after cloning from GitHub!
+
+## 📝 License
+This project is part of the Blucentia transparency movement MVP demonstration.
