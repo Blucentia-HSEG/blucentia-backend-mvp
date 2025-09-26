@@ -325,5 +325,5 @@ ls -lh hseg_final_dataset.json # Check merged file (if created)
 
 **Note**: The application now works directly with chunked data files - no manual merging required after cloning from GitHub!
 
-📝 License
+## 📝 License
 This project is part of the Blucentia transparency movement MVP demonstration.
