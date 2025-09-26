@@ -56,8 +56,8 @@ A comprehensive Flask-based web application for visualizing HSEG (Healthy System
 The application now works directly with chunked JSON files, making it GitHub-compatible without any manual merging:
 
 ```bash
-git clone <your-repository-url>
-cd FSK1
+git clone https://github.com/Blucentia-HSEG/blucentia-backend-mvp.git
+cd blucentia-backend-mvp
 npm run setup          # Install dependencies
 npm run start          # Start application (auto-loads from chunks)
 ```
@@ -66,16 +66,16 @@ npm run start          # Start application (auto-loads from chunks)
 
 **Option 1: Direct Python execution**
 ```bash
-git clone <your-repository-url>
-cd FSK1
+git clone https://github.com/Blucentia-HSEG/blucentia-backend-mvp.git
+cd blucentia-backend-mvp
 pip install -r requirements.txt
 python app.py          # Automatically loads from data/*.json chunks
 ```
 
 **Option 2: With manual merge**
 ```bash
-git clone <your-repository-url>
-cd FSK1
+git clone https://github.com/Blucentia-HSEG/blucentia-backend-mvp.git
+cd blucentia-backend-mvp
 npm run setup
 npm run build          # Merge data chunks (optional)
 npm run start
@@ -121,8 +121,8 @@ python utils/merge_json.py    # Reconstructs full dataset
 
 ```bash
 # 1. Clone from GitHub
-git clone <repository-url>
-cd FSK1
+git clone https://github.com/Blucentia-HSEG/blucentia-backend-mvp.git
+cd blucentia-backend-mvp
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -152,8 +152,8 @@ python app.py
 #### Option 1: Standard Deployment
 ```bash
 # Clone repository
-git clone <your-repo>
-cd FSK1
+git clone https://github.com/Blucentia-HSEG/blucentia-backend-mvp.git
+cd blucentia-backend-mvp
 
 # Install dependencies
 pip install -r requirements.txt
